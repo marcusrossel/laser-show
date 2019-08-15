@@ -17,6 +17,24 @@ import processing.serial.*;
 import cc.arduino.*;
 
 
+//-STATE-------------------------------------------------------------//
+
+
+enum InputState {
+  automatic, 
+  patternWheel
+}
+
+InputState INPUT_STATE = InputState.automatic;
+
+enum ShowState {
+  allOn,  
+  input,
+  allOff
+}
+
+ShowState SHOW_STATE = ShowState.input;
+
 //-AUDIO-OBJECTS-----------------------------------------------------//
 
 
@@ -36,6 +54,7 @@ Server server;
 //-VISUALIZATION-OBJECTS---------------------------------------------//
 
 
+Patterns patterns = new Patterns();
 Visualizer visualizer = new Visualizer();
 ServerVisualizer serverVisualizer;
 
@@ -80,17 +99,29 @@ void draw() {
 
 
 void mouseWheel(MouseEvent event) {
-  float e = event.getCount();
-  println(e);
+  if (INPUT_STATE != InputState.patternWheel) { return; }
+  SHOW_STATE = ShowState.input;
+  
+  switch (event.getCount()) {
+    case 1: patterns.step(); break;  
+    case -1: patterns.back(); break;
+  }
 }
 
 void mousePressed() {
   if (mouseButton == LEFT) {
-    fill(0);
+    if (INPUT_STATE != InputState.patternWheel) { return; }
+    SHOW_STATE = ShowState.allOn;
   } else if (mouseButton == RIGHT) {
-    fill(255);
+    if (INPUT_STATE != InputState.patternWheel) { return; }
+    SHOW_STATE = ShowState.allOff;
   } else {
-    fill(126);
+    if (INPUT_STATE == InputState.patternWheel) {
+      INPUT_STATE = InputState.automatic;
+      SHOW_STATE = ShowState.input;
+    } else {
+      INPUT_STATE = InputState.patternWheel;
+    }
   }
 }
 
@@ -99,7 +130,7 @@ void mousePressed() {
 
 
 void setup() {
-  size(1080, 720); 
+  fullScreen(); // size(1080, 720); 
   bindRuntimeSpecifiers();
   instantiateAudioObjects();
   instantiateFunctionObjects();
@@ -186,6 +217,7 @@ void instantiateFunctionObjects() {
   // Instantiates and captures the server instances or aborts if that operation fails.
   try {
     server = serverFromSpecification(serverSpecification, arduino);
+    server.showOutput(true);
   } catch (Exception e) {
     println("Internal error: `Lightshow.pde` was unable to instantiate server: ", e);
     System.exit(3);

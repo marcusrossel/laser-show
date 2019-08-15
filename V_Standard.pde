@@ -62,9 +62,7 @@ final class V_Standard implements ServerVisualizer {
     color baseColor = #323232;
     color triggerColor = server.showOutput ? #FFFF00 : #FF4000;
   
-    // Draws the tigger pane.
-    if (server.usePatterns()) {
-      Map<Integer, Integer> pinStates = server.patterns.pinStates();
+      Map<Integer, Integer> pinStates = patterns.pinStates();
       List<Integer> pins = new ArrayList<Integer>(pinStates.keySet());
       Collections.sort(pins);
       
@@ -75,9 +73,5 @@ final class V_Standard implements ServerVisualizer {
         if (state.equals(Arduino.HIGH)) { fill(triggerColor); } else { fill(baseColor); }
         rect(pinIndex * paneWidth, 0, paneWidth, triggerPaneY);
       }
-    } else {
-      if (server.didTrigger) { fill(triggerColor); } else { fill(baseColor); }
-      rect(0, 0, width, triggerPaneY);
-    }
   }
 }

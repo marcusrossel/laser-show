@@ -1,4 +1,0 @@
-Sensitivity:400:int
-Output Pins:[8, 9, 10]:int-list
-Use Patterns:false:bool
-Configuration Read Cycle:5.0:float

@@ -3,11 +3,11 @@ Upper Frequency Bound        :float:    700.0
 Feature Window Size          :float:    5.0
 Trigger Threshold	     :float:    0.5
 Maximum Loudness Window Size :float:    100.0
-Minimal Trigger Threshold    :float:    0.3
-Output Pins                  :int-list: [2]
+Minimal Trigger Threshold    :float:    0.2
+Output Pins                  :int-list: i[]
 Use Patterns                 :bool:	false
-Use Frequency Finder         :bool:     false
+Use Frequency Finder         :bool:     true
 Frequency Finder Range       :float:    500.0
-Frequency Finder Maximum     :float:    500.0
+Frequency Finder Maximum     :float:    1000.0
 Frequency Finder Window Size :float:    7.0
 Configuration Read Cycle     :float:    5.0

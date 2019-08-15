@@ -16,7 +16,6 @@ final class S_Manual implements Server {
   }
   
   List<Integer> outputPins() { return (List<Integer>) configuration.valueForTrait("Output Pins"); }
-  Boolean usePatterns()      { return (Boolean) configuration.valueForTrait("Use Patterns"); }
   Float sampleDuration()     { return (Float) configuration.valueForTrait("Sample Duration"); }
   Float multiplier()         { return (Float) configuration.valueForTrait("Multiplier"); }
   Float tolerance()          { return (Float) configuration.valueForTrait("Tolerance"); }
@@ -29,7 +28,6 @@ final class S_Manual implements Server {
   Boolean lastDidTrigger = false;
   Boolean didTrigger = false;
 
-  Patterns patterns = new Patterns();
   TimedQueue pressHistory = new TimedQueue(0f);
 
   void processChunk(AudioBuffer buffer, FFT fft) {
@@ -59,14 +57,8 @@ final class S_Manual implements Server {
   }
   
   void updateOutput(Boolean trigger) {    
-    // Outputs to the Arduino differently, depending on whether patterns should be used or not.  
-    if (usePatterns()) {
-      if (trigger) { patterns.step(); } 
-      patterns.applyStateToArduino(arduino, showOutput);
-    } else {   
-      Integer newOutput = (showOutput && trigger) ? Arduino.HIGH : Arduino.LOW;
-      for (Integer pin: outputPins()) { arduino.digitalWrite(pin, newOutput); }
-    }
+    if (trigger) { patterns.step(); } 
+    patterns.applyStateToArduino(arduino);
   }
   
   void showOutput(Boolean show) { showOutput = show; }

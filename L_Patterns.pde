@@ -28,6 +28,9 @@ final class Patterns {
     new Integer[][] {{2, 3, 4}, {0, 1, 2}, {1, 3}, {0, 2, 4}} // Chaos #3.2
   );
   
+  private List<Integer[]> history = new ArrayList<Integer[]>(Arrays.asList(new Integer[] {}, new Integer[] {}));
+  private Integer historyIndex = 0;
+  
   private List<Integer> laserPins = Arrays.asList(2, 3, 4, 5, 6); // [yellow, red, white, green, blue]
   
   // Indicates what the next iteration value will be. 
@@ -38,7 +41,11 @@ final class Patterns {
   
   private Random randomNumberGenerator = new Random();
 
-  void step() {  
+  void step() {
+    historyIndex++;
+    
+    if (historyIndex < history.size()) { return; } 
+    
     nextIteration++;
     
     // Sets the next iteration back to 0 if the current pattern is complete.
@@ -50,29 +57,41 @@ final class Patterns {
     if (nextIteration == 0) {
       currentPatternIndex = randomNumberGenerator.nextInt(allPatterns.size());
     }
+    
+    history.add(allPatterns.get(currentPatternIndex)[nextIteration]);
   }
   
-  Map<Integer, Integer> pinStates() {
-    // Initializes the pin state map to set every pin to LOW.
+  void back() {
+    historyIndex = max(historyIndex - 1, 0); 
+  }
+  
+  Map<Integer, Integer> pinStates() {   
+    // Initializes the pin state map to set every pin to LOW or HIGH.
     Map<Integer, Integer> pinStates = new HashMap<Integer, Integer>();
-    for (Integer pin: laserPins) { pinStates.put(pin, Arduino.LOW); }
     
-    Integer[][] pinIndexOrder = allPatterns.get(currentPatternIndex);
+    for (Integer pin: laserPins) {
+      switch (SHOW_STATE) {
+        case allOn: pinStates.put(pin, Arduino.HIGH); break;
+        case allOff:
+        case input: pinStates.put(pin, Arduino.LOW); break;
+      }
+    }
     
     // Turns those pins on that are supposed to be on for the current iteration.
-    for (Integer pinIndex: pinIndexOrder[nextIteration]) {
-      Integer pin = laserPins.get(pinIndex);
-      
-      pinStates.put(pin, Arduino.HIGH);
+    if (SHOW_STATE == ShowState.input) {
+      for (Integer pinIndex: history.get(historyIndex)) {
+        Integer pin = laserPins.get(pinIndex);
+        
+        pinStates.put(pin, Arduino.HIGH);
+      }
     }
     
     return pinStates;
   }
   
-  void applyStateToArduino(Arduino arduino, Boolean showOutput) {
-    for (Map.Entry<Integer, Integer> pinStatePair: pinStates().entrySet()) {
-      Integer value = showOutput ? pinStatePair.getValue() : Arduino.LOW;
-      arduino.digitalWrite(pinStatePair.getKey(), value);
+  void applyStateToArduino(Arduino arduino) {
+    for (Map.Entry<Integer, Integer> pinStatePair: pinStates().entrySet()) {      
+      arduino.digitalWrite(pinStatePair.getKey(), pinStatePair.getValue());
     }
   }
 }

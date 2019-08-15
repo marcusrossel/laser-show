@@ -49,6 +49,9 @@ final class FrequencyFinder {
 // https://en.wikipedia.org/wiki/A-weighting
 // https://github.com/audiojs/a-weighting
 Float aWeightedFrequency(Float frequency) {
+  // #TEMP  
+  if (true) { return 1f; }
+  
   Float frequency2 = pow(frequency, 2);
   Float dividend = 1.2588966 * 148840000 * pow(frequency2, 2);
   Float root = sqrt(frequency2 + 11599.29) * (frequency2 + 544496.41);

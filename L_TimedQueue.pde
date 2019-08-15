@@ -38,7 +38,7 @@ final class TimedQueue {
       // The factor 1000 converts the rentation duration from seconds to milliseconds. 
       if (now - timeStamps.get(0) > (2 * retentionDuration * 1000)) {
         values = relevantHistory();
-        timeStamps = timeStamps.subList(timeStamps.size() - values.size(), timeStamps.size() - 1);
+        timeStamps = timeStamps.subList(timeStamps.size() - values.size() - 1, timeStamps.size() - 1);
       }
     }
   }

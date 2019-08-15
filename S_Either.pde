@@ -34,7 +34,6 @@ final class S_Either implements Server {
   Float centerFrequency = 0f;
   
   TimedQueue history = new TimedQueue(0f);
-  Patterns patterns = new Patterns();
 
   void processChunk(AudioBuffer buffer, FFT fft) {
     // Passes down whether or not the last chunk did trigger.
@@ -54,17 +53,11 @@ final class S_Either implements Server {
     didTrigger = (recordedLoudness > triggerLoudness);
 
     // Progresses the current pattern, if patterns are being used.
-    if (didTrigger && !didTriggerOnLastChunk && usePatterns()) { patterns.step(); }
+    if (didTrigger && !didTriggerOnLastChunk) { patterns.step(); }
 
     // Updates the output pins' states if necessary.
-    if (arduino != null) {
-      // Outputs to the Arduino differently, depending on whether patterns should be used or not.  
-      if (usePatterns()) {
-        patterns.applyStateToArduino(arduino, true);
-      } else if (didTrigger != didTriggerOnLastChunk) {  
-        Integer newOutput = didTrigger ? Arduino.HIGH : Arduino.LOW;
-        for (Integer pin : outputPins()) { arduino.digitalWrite(pin, newOutput); }
-      }
+    if (arduino != null) {  
+      patterns.applyStateToArduino(arduino);
     }
   }
   

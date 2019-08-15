@@ -55,7 +55,6 @@ class StandardServer implements Server {
   TimedQueue featureHistory = new TimedQueue(0f);
   TimedQueue maxLoudnessHistory = new TimedQueue(0f);
   
-  Patterns patterns = new Patterns();
   FrequencyFinder frequencyFinder = new FrequencyFinder(0f, 20000f);
   
   Float absoluteLowerBound()         { return (Float) configuration.valueForTrait("Lower Frequency Bound"); }
@@ -68,7 +67,6 @@ class StandardServer implements Server {
   Float minimalTriggerThreshold()    { return (Float) configuration.valueForTrait("Minimal Trigger Threshold"); }
   
   List<Integer> outputPins()         { return (List<Integer>) configuration.valueForTrait("Output Pins"); }
-  Boolean usePatterns()              { return (Boolean) configuration.valueForTrait("Use Patterns"); }
   
   Boolean useFrequencyFinder()       { return (Boolean) configuration.valueForTrait("Use Frequency Finder"); }
   Float frequencyFinderRange()       { return (Float) configuration.valueForTrait("Frequency Finder Range"); }
@@ -104,17 +102,11 @@ class StandardServer implements Server {
   
   void updateOutput(Boolean trigger) {    
     // Progresses the current pattern, if patterns are being used.
-    if (trigger && !didTriggerOnLastChunk && usePatterns()) { patterns.step(); }
+    if (trigger && !didTriggerOnLastChunk && INPUT_STATE == InputState.automatic) { patterns.step(); }
 
     // Updates the output pins' states if necessary.
     if (arduino != null) {
-      // Outputs to the Arduino differently, depending on whether patterns should be used or not.  
-      if (usePatterns()) {
-        patterns.applyStateToArduino(arduino, showOutput); 
-      } else if (didTrigger != didTriggerOnLastChunk) {   
-        Integer newOutput = (showOutput && didTrigger) ? Arduino.HIGH : Arduino.LOW;
-        for (Integer pin : outputPins()) { arduino.digitalWrite(pin, newOutput); }
-      }
+      patterns.applyStateToArduino(arduino); 
     }
   }
   
