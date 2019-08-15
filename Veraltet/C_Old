@@ -1,0 +1,7 @@
+Lower Frequency Bound:0.0:float
+Upper Frequency Bound:2000.0:float
+Loudness Recalibration Duration:3.0:float
+Minimal Trigger Threshold:0.3:float
+Output Pins:i[]:int-list
+Use Patterns:true:bool
+Configuration Read Cycle:5.0:float
