@@ -31,7 +31,7 @@ final class Patterns {
   private List<Integer[]> history = new ArrayList<Integer[]>(Arrays.asList(new Integer[] {}, new Integer[] {}));
   private Integer historyIndex = 0;
   
-  private List<Integer> laserPins = Arrays.asList(2, 3, 4, 5, 6); // [yellow, red, white, green, blue]
+  private List<Integer> laserPins = Arrays.asList(9, 8, 7, 6, 5); // [yellow, red, white, green, blue]
   
   // Indicates what the next iteration value will be. 
   private Integer nextIteration = 0;
@@ -90,8 +90,21 @@ final class Patterns {
   }
   
   void applyStateToArduino(Arduino arduino) {
-    for (Map.Entry<Integer, Integer> pinStatePair: pinStates().entrySet()) {      
-      arduino.digitalWrite(pinStatePair.getKey(), pinStatePair.getValue());
+    for (Map.Entry<Integer, Integer> pinStatePair: pinStates().entrySet()) {
+      int value = pinStatePair.getValue();
+      int pin = pinStatePair.getKey();
+      
+      int pinIndex = laserPins.indexOf(pin);
+      
+      if (lastWrite[pinIndex] != value) {
+         int v = (value == Arduino.HIGH) ? 255 : 0;
+         arduino.analogWrite(pin, v);  
+         lastWrite[pinIndex] = value;
+      }
+      
+      
     }
   }
+  
+  int[] lastWrite = {0, 0, 0, 0, 0};
 }

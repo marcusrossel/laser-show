@@ -32,31 +32,76 @@ final class Button {
 
 final class LEDLighter {
   
-  public LEDLighter(Float transitionDuration, Integer[] pins, Arduino arduino) {
-    if (pins.length != 3) {
-       println("LEDLighter expects excatly 3 pins.");
+  List<Integer[]> colors = Arrays.asList(
+    new Integer[] { 255, 0, 0 }, // red must be first - is used in showRed()
+    new Integer[] { 0, 255, 0},
+    new Integer[] { 0, 0, 255},
+    new Integer[] { 254, 0, 60 },
+    new Integer[] { 17, 239, 54 },
+    new Integer[] { 0, 254, 230 },
+    new Integer[] { 197, 248, 8 },
+    new Integer[] { 0, 0, 0 },
+    new Integer[] { 255, 255, 255 }
+  );
+  
+  public LEDLighter(Integer[] pins, Arduino arduino) {
+    if (pins.length != 6) {
+       println("LEDLighter expects exactly 6 pins.");
        System.exit(4);
     }
     
-    this.transitionDuration = transitionDuration;
     this.pins = pins;
     this.arduino = arduino;
-    transitionStart = millis();
   }
   
   private Arduino arduino;
   private Integer[] pins;
   
-  private Float transitionDuration;
-  private Integer transitionStart;
+  private Integer lastStep = millis();
   
   private Random randomNumberGenerator = new Random();
   
   private Integer[] currentColor = {0, 0, 0};
   private Integer[] nextColor = {0, 0, 0};
-  private Integer[] colorDifference = {0, 0, 0};
   
-  void step() {    
+  void step() {
+    if (arduino == null) { return; }
+    
+    if (INPUT_STATE == InputState.patternWheel) {     
+      for (Integer component = 0; component < 3; component++) {
+        Integer componentPin1 = pins[component];
+        Integer componentPin2 = pins[component + 3];
+      
+        arduino.analogWrite(componentPin1, colors.get(0)[component]);
+        arduino.analogWrite(componentPin2, colors.get(0)[component]);
+      }
+    
+      return;
+    }
+    
+    if (millis() - lastStep < 10) { return; }
+    lastStep = millis();
+    
+    if (Arrays.equals(currentColor, nextColor)) {
+      Integer nextColorIndex = randomNumberGenerator.nextInt(colors.size());
+      nextColor = colors.get(nextColorIndex);
+    }
+    
+    for (Integer component = 0; component < 3; component++) {
+      Integer componentPin1 = pins[component];
+      Integer componentPin2 = pins[component + 3];
+      
+      Integer increment = (currentColor[component] > nextColor[component]) ? -1 : 0;
+      increment = (currentColor[component] < nextColor[component]) ? 1 : increment;
+      
+      currentColor[component] += increment;
+      
+      arduino.analogWrite(componentPin1, currentColor[component]);
+      arduino.analogWrite(componentPin2, currentColor[component]);
+    }
+  }
+  
+  /*void step() {
     if (arduino == null) { return; }
     
     Integer now = millis();
@@ -68,18 +113,21 @@ final class LEDLighter {
       transitionStart = now;
       relativeProgress = 0f;
       
+      Integer nextColorIndex = randomNumberGenerator.nextInt(colors.size());
+      nextColor = colors.get(nextColorIndex);
       for (Integer component = 0; component < 3; component++) {
-        Integer randomValue = randomNumberGenerator.nextInt(256);
-        nextColor[component] = randomValue;
-        colorDifference[component] = randomValue - currentColor[component];
+        Integer value = nextColor[component];
+        colorDifference[component] = value - currentColor[component];
       }
     }
     
     for (Integer component = 0; component < 3; component++) {
-      Integer componentPin = pins[component];
+      Integer componentPin1 = pins[component];
+      Integer componentPin2 = pins[component + 3];
       Integer componentValue = Math.round(currentColor[component] + (relativeProgress * colorDifference[component]));
       
-      arduino.analogWrite(componentPin, componentValue);
+      arduino.analogWrite(componentPin1, componentValue);
+      arduino.analogWrite(componentPin2, componentValue);
     }
-  }
+  }*/
 }

@@ -63,10 +63,9 @@ ServerVisualizer serverVisualizer;
 
 
 static final Integer MAX_FREQ = 10000;
-static final Integer ON_OFF_BUTTON_PIN = 12;
-static final Integer MANUAL_BUTTON_PIN = 7;
-static final Integer[] LED_PINS = {9, 10, 11};
-static final Float LED_TRANSITION_DURATION = 3f;
+static final Integer ON_OFF_BUTTON_PIN = -1;
+static final Integer MANUAL_BUTTON_PIN = -1;
+static final Integer[] LED_PINS = {2, 3, 4, 10, 11, 13};
 
 Boolean shouldVisualize = false;
 String arduinoPath;
@@ -83,7 +82,7 @@ void draw() {
   AudioBuffer chunk = lineIn.mix;
   fft.forward(chunk);
 
-  server.showOutput(button.isOn());
+  // server.showOutput(button.isOn());
   server.processChunk(chunk, fft);
 
   if (serverVisualizer != null) {
@@ -130,7 +129,7 @@ void mousePressed() {
 
 
 void setup() {
-  fullScreen(); // size(1080, 720); 
+  size(1080, 720); 
   bindRuntimeSpecifiers();
   instantiateAudioObjects();
   instantiateFunctionObjects();
@@ -212,7 +211,7 @@ void instantiateFunctionObjects() {
   }
   
   button = new Button(false, ON_OFF_BUTTON_PIN, arduino);
-  ledLighter = new LEDLighter(LED_TRANSITION_DURATION, LED_PINS, arduino);
+  ledLighter = new LEDLighter(LED_PINS, arduino);
   
   // Instantiates and captures the server instances or aborts if that operation fails.
   try {
