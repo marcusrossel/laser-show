@@ -7,6 +7,12 @@ final class Visualizer {
   // Records the highest intensity of a frequency ever measured.
   Float maxIntensity = 0f;
 
+  void showState() {
+    fill(255);
+    text("Input Modus: " + INPUT_STATE, 10, 70);  
+    text("Anzeige Modus: " + SHOW_STATE, 10, 100);
+  }
+
   void showWaveformForChunk(AudioBuffer chunk) {
     Integer sampleCount = chunk.size();
 

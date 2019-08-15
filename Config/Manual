@@ -1,6 +1,0 @@
-Sample Duration              :float:    5.0
-Multiplier                   :float:    1.0
-Tolerance                    :float:    0.05
-Output Pins                  :int-list: i[]
-Use Patterns                 :bool:	true
-Configuration Read Cycle     :float:    5.0

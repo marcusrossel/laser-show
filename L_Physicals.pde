@@ -4,25 +4,35 @@
 final class Button {
   private Arduino arduino;
   private Integer pin;
-  private Boolean isOn;
+  
+  private Integer onDuration;
+  private Integer lastBuzz;
+  
   private Integer lastRead = 0;
   
-  public Button(Boolean isOn, Integer pin, Arduino arduino) {
+  public Button(Integer onDuration, Integer pin, Arduino arduino) {
     this.arduino = arduino;
     this.pin = pin;
-    this.isOn = isOn;
+    this.onDuration = onDuration * 1000;
+    this.lastBuzz = 0;
     
     if (arduino != null) { arduino.pinMode(pin, Arduino.INPUT); }
   }
   
-  Boolean isOn() {
-    if (arduino == null) { return true; }
+  void update() {
+    if (arduino == null) { return; }
+    if (INPUT_STATE == InputState.patternWheel) { lastBuzz = -BUZZER_DURATION; }
     
     Integer buttonState = arduino.digitalRead(pin); 
-    if (buttonState == 1 && lastRead == 0) { isOn = !isOn; }
+    if (buttonState == 1 && lastRead == 0) {
+      lastBuzz = millis();
+    }
     
     lastRead = buttonState;
-    return isOn;
+  }
+  
+  Boolean isOn() {
+    return(millis() - lastBuzz) <= onDuration; 
   }
 }
 
@@ -96,8 +106,11 @@ final class LEDLighter {
       
       currentColor[component] += increment;
       
-      arduino.analogWrite(componentPin1, currentColor[component]);
-      arduino.analogWrite(componentPin2, currentColor[component]);
+      Integer flickeringValue = currentColor[component]; 
+      if (buzzer.isOn() && (millis() % 500 > 250)) { flickeringValue = 0; }
+      
+      arduino.analogWrite(componentPin1, flickeringValue);
+      arduino.analogWrite(componentPin2, flickeringValue);
     }
   }
   

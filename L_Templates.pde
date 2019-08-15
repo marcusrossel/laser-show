@@ -40,6 +40,7 @@ class StandardServer implements Server {
   
   Boolean didTrigger = false;
   Boolean didTriggerOnLastChunk = false;
+  Integer timeOfLastTrigger = 0;
   
   Float recordedLoudness = 0f;
   Float totalMaxLoudness = 0f;
@@ -62,6 +63,8 @@ class StandardServer implements Server {
   
   Float featureWindowSize()          { return (Float) configuration.valueForTrait("Feature Window Size"); }
   Float triggerTreshold()            { return (Float) configuration.valueForTrait("Trigger Threshold"); }
+  
+  Float sensitivity()                { return (1f / ((float) (Integer) configuration.valueForTrait("Max BPM") / 60f)) * 1000; }
   
   Float maxLoudnessWindowSize()      { return (Float) configuration.valueForTrait("Maximum Loudness Window Size"); }
   Float minimalTriggerThreshold()    { return (Float) configuration.valueForTrait("Minimal Trigger Threshold"); }
@@ -101,8 +104,8 @@ class StandardServer implements Server {
   }
   
   void updateOutput(Boolean trigger) {    
-    // Progresses the current pattern, if patterns are being used.
-    if (trigger && !didTriggerOnLastChunk && INPUT_STATE == InputState.automatic) { patterns.step(); }
+    Boolean sensitivityThresholdWasPassed = (millis() - timeOfLastTrigger) > sensitivity();
+    if (sensitivityThresholdWasPassed && trigger && !didTriggerOnLastChunk && INPUT_STATE == InputState.automatic) { patterns.step(); timeOfLastTrigger = millis(); }
 
     // Updates the output pins' states if necessary.
     if (arduino != null) {

@@ -46,7 +46,7 @@ FFT fft;
 //-FUNCTION-OBJECTS--------------------------------------------------//
 
 
-Button button;
+Button buzzer;
 LEDLighter ledLighter;
 Server server;
 
@@ -63,8 +63,8 @@ ServerVisualizer serverVisualizer;
 
 
 static final Integer MAX_FREQ = 10000;
-static final Integer ON_OFF_BUTTON_PIN = -1;
-static final Integer MANUAL_BUTTON_PIN = -1;
+static final Integer BUZZER_PIN = 12;
+static final Integer BUZZER_DURATION = 10;
 static final Integer[] LED_PINS = {2, 3, 4, 10, 11, 13};
 
 Boolean shouldVisualize = false;
@@ -75,14 +75,20 @@ String serverSpecification;
 //-RUN-LOOP----------------------------------------------------------//
 
 
-void draw() {
+void draw() {  
   ledLighter.step();
   
   // Gets the next audio chunk from the line-in and FFTs it.
   AudioBuffer chunk = lineIn.mix;
   fft.forward(chunk);
 
-  // server.showOutput(button.isOn());
+  buzzer.update();
+  if (buzzer.isOn()) {
+    SHOW_STATE = ShowState.input;
+  } else if (INPUT_STATE != InputState.patternWheel) {
+    SHOW_STATE = ShowState.allOff;
+  }
+  
   server.processChunk(chunk, fft);
 
   if (serverVisualizer != null) {
@@ -90,6 +96,7 @@ void draw() {
     // visualizer.showWaveformForChunk(chunk);
     visualizer.showSpectrumForChunk(fft, true);
     serverVisualizer.showServerProperties(); 
+    visualizer.showState();
   }
 }
 
@@ -134,6 +141,9 @@ void setup() {
   instantiateAudioObjects();
   instantiateFunctionObjects();
   setupVisualizersIfNecessary();
+  
+  PFont font = createFont("Helvetica", 30, true);
+  textFont(font);
 }
 
 Server serverFromSpecification(String specification, Arduino arduino) throws Exception {
@@ -210,7 +220,7 @@ void instantiateFunctionObjects() {
     }
   }
   
-  button = new Button(false, ON_OFF_BUTTON_PIN, arduino);
+  buzzer = new Button(BUZZER_DURATION, BUZZER_PIN, arduino);
   ledLighter = new LEDLighter(LED_PINS, arduino);
   
   // Instantiates and captures the server instances or aborts if that operation fails.
