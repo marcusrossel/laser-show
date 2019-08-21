@@ -1,22 +1,23 @@
 final class Configuration {
 
   private Map<String, Object> staticTraits;
+  
   // This map is updated with new information from the configuration files whenever the time of the last refresh is over a certain threshold.
   private Map<String, Object> runtimeTraits;
   
-  private Path runtimeConfiguration;
+  private Path configurationFile;
   
   // These properties are used to track whether the maps above need to be refreshed.
-  private Integer timeOfLastRefresh;
-  private Integer millisecondsToRefresh; // aka refresh interval
+  private int timeOfLastRefresh;
+  private int millisecondsToRefresh; // aka refresh interval
 
-  public Configuration(Path staticConfiguration, Path runtimeConfiguration) {
-    this.runtimeConfiguration = runtimeConfiguration;
+  public Configuration(Path configurationFile) {
+    this.configurationFile = configurationFile;
     timeOfLastRefresh = 0;
     millisecondsToRefresh = 0;
 
     // Creates the static trait map, which has to succeed or else the program has to abort.
-    try { staticTraits = mapFromConfiguration(staticConfiguration); } catch (Exception e) {
+    try { staticTraits = mapFromConfiguration(configurationFile); } catch (Exception e) {
       println("Internal error: class `Configuration` was unable to create static trait map");
       System.exit(3);
     }
@@ -26,7 +27,7 @@ final class Configuration {
   }
 
   // Returns the value for the trait with a given name.
-  public Object valueForTrait(String trait) {
+  public Object valueForTrait(String trait) {    
     // Refreshes the runtime trait map if the refresh interval has been passed.
     if ((millis() - timeOfLastRefresh) > millisecondsToRefresh) {
       updateRuntimeTraitConfiguration();
@@ -41,13 +42,14 @@ final class Configuration {
   // Wraps `mapFromConfiguration` to be runtime configuration file specific.
   // It also swallows exceptions and makes sure the `timeOfLastRefresh` is set.
   private void updateRuntimeTraitConfiguration() {
-    try { runtimeTraits = mapFromConfiguration(runtimeConfiguration); } catch (Exception e) { /* This is ok. */ }
+    try { runtimeTraits = mapFromConfiguration(configurationFile); } catch (Exception e) { /* This is ok. */ }
     timeOfLastRefresh = millis();
   }
 
   // Creates a map from a given file which is expected to be a sever configuration file of the form:
-  // <trait 1 name>:<trait 1 value type>:<trait 1 value>
-  // <trait 2 name>:<trait 2 value type>:<trait 2 value>
+  // <trait 1 name>: <trait 1 value> // <optional comment>
+  // <trait 2 name>: <trait 2 value> // <optional comment>
+  // // <optional comment>
   // ...
   private Map<String, Object> mapFromConfiguration(Path path) throws Exception {
     Map<String, Object> map = new HashMap<String, Object>();
@@ -59,12 +61,16 @@ final class Configuration {
       String[] entryComponents = configurationEntry.split(":");
 
       String traitIdentifier = entryComponents[0].trim();
+      if (traitIdentifier.startsWith("//") || traitIdentifier.isEmpty()) { continue; }
+      
+      String traitValue = entryComponents[1].split("//")[0].trim();
+      
       // Converts the value from a literal string to the specified type.
-      Object value = valueFromStringWithType(entryComponents[2].trim(), entryComponents[1].trim());
+      Object value = valueFromString(traitValue);
 
       // "Configuration Read Cycle" is a reserved trait name which is used to change the refresh interval of a configuration object.
       if (traitIdentifier == "Configuration Read Cycle") {
-        millisecondsToRefresh = Math.round((Float) value);
+        millisecondsToRefresh = Math.round((float) value * 1000);
       } else {
         map.put(traitIdentifier, value);
       }
@@ -74,45 +80,28 @@ final class Configuration {
     return map;
   }
 
-  // Converts a given string to a value of given type. If this fails, null is returned.
-  private Object valueFromStringWithType(String string, String type) {
-     switch (type) {
-       case "int":   return Integer.parseInt(string);
-       case "float": return Float.parseFloat(string);
-       case "bool":  return Boolean.parseBoolean(string);
+  // Converts a given string to a value following certain parsing rules. If this fails, null is returned.
+  private Object valueFromString(String string) {
+    if (string.contains(".")) {
+      return Float.parseFloat(string);
+    
+    } else if (string.contains("%")) {
+      return ((float) Integer.parseInt(string.replace("%", ""))) / 100f;
+    
+    } else if (string.contains("[")) {
+      List<Integer> intList = new ArrayList<Integer>();
 
-       case "int-list":
-         List<Integer> intList = new ArrayList<Integer>();
+      if (string.charAt(0) == 'i') { return intList; }
 
-         if (string.charAt(0) == 'i') { return intList; }
+      String bareIntList = string.substring(1, string.length() - 1);
+      String[] intElements = bareIntList.split(",");
+      for (String element: intElements) { intList.add(Integer.parseInt(element.trim())); }
+      return intList;
 
-         String bareIntList = string.substring(1, string.length() - 1);
-         String[] intElements = bareIntList.split(",");
-         for (String element: intElements) { intList.add(Integer.parseInt(element.trim())); }
-         return intList;
-
-       case "float-list":
-         List<Float> floatList = new ArrayList<Float>();
-
-         if (string.charAt(0) == 'f') { return floatList; }
-
-         String bareFloatList = string.substring(1, string.length() - 1);
-         String[] floatElements = bareFloatList.split(",");
-         for (String element: floatElements) { floatList.add(Float.parseFloat(element.trim())); }
-         return floatList;
-
-       case "bool-list":
-         List<Boolean> boolList = new ArrayList<Boolean>();
-
-         if (string.charAt(0) == 'b') { return boolList; }
-
-         String bareBoolList = string.substring(1, string.length() - 1);
-         String[] boolElements = bareBoolList.split(",");
-         for (String element: boolElements) { boolList.add(Boolean.parseBoolean(element.trim())); }
-         return boolList;
-
-       default:
-         return null;
-     }
+    } else if (string.equals("true") || string.equals("false")) { 
+      return Boolean.parseBoolean(string);
+    } else {
+      return Integer.parseInt(string);
+    }
   }
 }

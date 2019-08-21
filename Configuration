@@ -1,0 +1,30 @@
+Buzzer Pin: 12
+Buzzer Duration: 8 // in seconds
+
+LED Red Pins: [2, 10]
+LED Green Pins: [3, 11]
+LED Blue Pins: [4, 13]
+
+Laser Pins: [5, 6, 7, 8, 9]
+
+Pattern History: 100 // number of remembered patterns
+
+Maximum BPM: 160
+
+Trigger Threshold: 140%
+Average History: 5.0 // in seconds
+
+Maximum Loudness History: 60.0 // in seconds
+Minimal Trigger Threshold: 40%
+
+Frequency Range: 500 // in Hz
+
+Frequency Finder Maximum: 1000 // in Hz
+Frequency Finder History: 4.0 // in seconds
+
+Visualize Spectrum: true
+Visualize State: true
+Visualize Analyzer: true
+Highest Visualized Frequency: 10000 // in Hz
+
+Configuration Read Cycle: 1.0 // in seconds

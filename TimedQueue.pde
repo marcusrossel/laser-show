@@ -1,6 +1,6 @@
 final class TimedQueue {
 
-  TimedQueue(Float retentionDuration) {
+  TimedQueue(float retentionDuration) {
     this.retentionDuration = retentionDuration;
   }
 
@@ -8,15 +8,15 @@ final class TimedQueue {
   private List<Integer> timeStamps = new ArrayList<Integer>();
   
   // This property is supposed to be setable.
-  Float retentionDuration; // in seconds
+  float retentionDuration; // in seconds
 
   private List<Float> relevantHistory() {
     if (timeStamps.isEmpty()) { return new ArrayList<Float>(); }
     
-    Integer now = millis();
+    int now = millis();
 
     // Gets the index of the oldest time stamp not older than the retention duration. If there is none, an empty array is returned.
-    Integer index = 0;
+    int index = 0;
     while (now - timeStamps.get(index) > retentionDuration * 1000) {
       index++;
       if (index == timeStamps.size()) { return new ArrayList<Float>(); }
@@ -25,8 +25,8 @@ final class TimedQueue {
     return values.subList(index, values.size() - 1);
   }
 
-  void push(Float value) {
-    Integer now = millis();
+  void push(float value) {
+    int now = millis();
  
     values.add(value);
     timeStamps.add(now);
@@ -43,68 +43,27 @@ final class TimedQueue {
     }
   }
     
-  Float average() {
+  float average() {
     List<Float> currentHistory = relevantHistory();
     if (currentHistory.isEmpty()) { return 0f; }
 
-    Float sum = 0f;
-    for (Float value: currentHistory) {
+    float sum = 0f;
+    for (float value : currentHistory) {
       sum += value;
     }
     
     return sum / currentHistory.size();
   }
   
-  Float max() {
+  float max() {
     List<Float> currentHistory = relevantHistory();
     if (currentHistory.isEmpty()) { return 0f; }
     
-    Float max = 0f;
-    for (Float value: currentHistory) {
+    float max = 0f;
+    for (float value : currentHistory) {
       max = Math.max(max, value); 
     }
     
     return max;
-  }
-  
-  Float averageAboveAverage() {
-    List<Float> currentHistory = relevantHistory();
-    if (currentHistory.isEmpty()) { return 0f; }
-
-    Float sum = 0f; 
-    for (Float value: currentHistory) { sum += value; }
-    Float average = sum / currentHistory.size();
-    
-    Float sumAbove = 0f;
-    Integer countAbove = 0;
-    for (Float value: currentHistory) {
-      if (value >= average) { sumAbove += value; countAbove++; }  
-    }
-    
-    return sumAbove / countAbove;
-  }
-  
-  Float averageOfMaxima() {
-    List<Float> currentHistory = relevantHistory();
-    if (currentHistory.isEmpty()) { return 0f; }
-    
-    Float sum = 0f;
-    Integer count = 0;
-    
-    Float preLastValue = 0f;
-    Float lastValue = 0f;
-    
-    for (Float value: currentHistory) {
-      if (lastValue > preLastValue && lastValue > value) {
-        sum += lastValue;
-        count++;
-      }
-      
-      preLastValue = lastValue;
-      lastValue = value;
-    }
-    
-    
-    return sum / count;
   }
 }
