@@ -28,19 +28,21 @@ enum MouseMode {
 }
 
 static final class State {
-  static InputSource inputSource = InputSource.none;
+  static InputSource inputSource = InputSource.analyzer;
   static MouseMode mouseMode = MouseMode.wheel; 
 }
 
 static Configuration configuration;
 
 static final class Runtime {
+  static boolean useBuzzer() {             return (boolean)            configuration.valueForTrait("Use Buzzer")                   ; }
   static int buzzerPin() {                 return (int)                configuration.valueForTrait("Buzzer Pin")                   ; }
   static int buzzerDuration() {            return (int)                configuration.valueForTrait("Buzzer Duration")              ; }
   static List<Integer> ledRedPins() {      return (ArrayList<Integer>) configuration.valueForTrait("LED Red Pins")                 ; }
   static List<Integer> ledGreenPins() {    return (ArrayList<Integer>) configuration.valueForTrait("LED Green Pins")               ; }
   static List<Integer> ledBluePins() {     return (ArrayList<Integer>) configuration.valueForTrait("LED Blue Pins")                ; }
   static List<Integer> laserPins() {       return (ArrayList<Integer>) configuration.valueForTrait("Laser Pins")                   ; }
+  static float maximumLaserOnDuration() {  return (float)              configuration.valueForTrait("Maximum Laser On-Duration")    ; }
   static int patternHistory() {            return (int)                configuration.valueForTrait("Pattern History")              ; }
   static int maximumBPM() {                return (int)                configuration.valueForTrait("Maximum BPM")                  ; }
   static float triggerThreshold() {        return (float)              configuration.valueForTrait("Trigger Threshold")            ; }
@@ -87,7 +89,7 @@ Visualizer visualizer = new Visualizer();
 void draw() {
   // Updates the LEDs and the buzzer first, as they are audio-independant.
   leds.update();
-  buzzer.update();
+  if (Runtime.useBuzzer()) { buzzer.update(); }
   
   // Gets the next audio chunk from the line-in and FFTs it.
   fft.forward(lineIn.mix);
@@ -96,7 +98,7 @@ void draw() {
   analyzer.processChunk(fft);
   
   // Updates the lasers according to the analyzer's state.
-  if (State.inputSource == InputSource.analyzer && analyzer.fired()) { lasers.processStep(1); }
+  lasers.processStep((State.inputSource == InputSource.analyzer && analyzer.fired()) ? 1 : 0);
   
   // Updates the visualization according to all new state.
   visualizer.update(fft);
@@ -118,7 +120,7 @@ void mousePressed() {
     switch (mouseButton) {
       case LEFT: State.mouseMode = MouseMode.allOn; lasers.processStep(0); break;
       case RIGHT: State.mouseMode = MouseMode.allOff; lasers.processStep(0); break;
-      default: State.inputSource = InputSource.none; break;
+      default: State.inputSource = Runtime.useBuzzer() ? InputSource.none : InputSource.analyzer; break;
     }
   } else if (mouseButton != LEFT && mouseButton != RIGHT) {
     State.inputSource = InputSource.mouse;
@@ -154,6 +156,20 @@ void setup() {
   } else {
     println("Error: `Lightshow.pde` didn't receive the correct number of command line arguments");
     System.exit(1); 
+  }
+  
+  // Initializes the Arduino's pins.
+  // TODO: Move this task to components' init methods.
+  arduino.pinMode(Runtime.buzzerPin(), Arduino.INPUT);
+  
+  List<Integer> allOutputPins = new ArrayList();
+  allOutputPins.addAll(Runtime.ledRedPins());
+  allOutputPins.addAll(Runtime.ledGreenPins());
+  allOutputPins.addAll(Runtime.ledBluePins());
+  allOutputPins.addAll(Runtime.laserPins());
+  
+  for (int pin: allOutputPins) {
+    arduino.pinMode(pin, Arduino.OUTPUT);  
   }
 }
 

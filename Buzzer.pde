@@ -10,7 +10,7 @@ final class Buzzer {
   
   // Updates the information obtained from the physical buzzer switch.
   private void updateMechanics() {
-    int buttonState = arduino.digitalRead(Runtime.buzzerPin()); 
+    int buttonState = arduino.digitalRead(Runtime.buzzerPin());
     
     if (buttonState == 1 && lastRead == 0) {
       lastBuzz = millis();
@@ -24,8 +24,7 @@ final class Buzzer {
     if (State.inputSource == InputSource.mouse) {
       lastBuzz = 0;
     } else {
-      State.inputSource = ((millis() - lastBuzz) <= Runtime.buzzerDuration()) ? InputSource.analyzer : InputSource.none;
-      State.inputSource = InputSource.analyzer; // TEMP
+      State.inputSource = ((millis() - lastBuzz) <= (Runtime.buzzerDuration() * 1000)) ? InputSource.analyzer : InputSource.none;
     }
   }
 }

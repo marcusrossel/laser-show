@@ -25,10 +25,15 @@ final class Lasers {
     {{0, 3}, {1, 4}, {2}, {0, 4}}, // Chaos #2.1
     {{1, 4}, {0, 3}, {0, 4}, {2}}, // Chaos #2.2
     {{0, 2, 4}, {1, 3}, {0, 1, 2}, {2, 3, 4}}, // Chaos #3.1
-    {{2, 3, 4}, {0, 1, 2}, {1, 3}, {0, 2, 4}} // Chaos #3.2
+    {{2, 3, 4}, {0, 1, 2}, {1, 3}, {0, 2, 4}}, // Chaos #3.2
+    
+    {{0, 1, 2, 3, 4}, {0, 4}, {0, 1, 2, 3, 4}, {1, 3}, {0, 1, 2, 3, 4}, {2}, {0, 1, 2, 3, 4}}, // Marcus #1
   };
   
   Map<Integer, Integer> lastOutput = new HashMap<Integer, Integer>();
+  boolean timedOut = false; 
+  
+  private int timeOfLastRealStep = millis();
   
   private LinkedList<int[]> patternHistory = new LinkedList<int[]>(Arrays.asList(new int[] {}, new int[] {}));
   private int historyIndex = 0;
@@ -65,6 +70,26 @@ final class Lasers {
       System.exit(1);
     }
     
+    // Records the current time as the time of the last "real" (meaning non-zero) step, if the current step is non-zero.
+    if (step != 0) {
+      timedOut = false;
+      timeOfLastRealStep = millis();
+    
+    // Turns off the lasers if they have been turned on for too long (this only applies if the input source is the analyzer). 
+    } else  {
+      timedOut = (State.inputSource == InputSource.analyzer && ((millis() - timeOfLastRealStep) > (Runtime.maximumLaserOnDuration() * 1000)));
+      
+      // Due to how `timedOut` is defined, this can only every be true if the input source is the analyzer.
+      // Hence the return at the end of this block is valid and needed.
+      if (timedOut) {
+        for (int pin : Runtime.laserPins()) {
+          arduino.digitalWrite(pin, Arduino.LOW);
+        }
+        
+        return;
+      }
+    }
+    
     // Updates the pattern history and its index according to the step taken.
     historyIndex = max(historyIndex + step, 0);
     if (historyIndex >= patternHistory.size()) { generateNextPattern(); }
@@ -93,7 +118,7 @@ final class Lasers {
     
     // Writes the pin states to the arduino.
     for (Map.Entry<Integer, Integer> pinStatePair: lastOutput.entrySet()) {      
-      arduino.analogWrite(pinStatePair.getKey(), pinStatePair.getValue());   
+      arduino.digitalWrite(pinStatePair.getKey(), pinStatePair.getValue());   
     }
   }
 }

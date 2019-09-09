@@ -33,8 +33,8 @@ final class Visualizer {
       
       maxAmplitude = max(maxAmplitude, amplitude);
 
-      int bandStartX = (int) (map(frequency, 0, Runtime.maximumVisualFrequency(), 0, width));
-      int bandLengthY = (int) (map(amplitude, 0, maxAmplitude, 0, height));
+      int bandStartX = (int) map(frequency, 0, Runtime.maximumVisualFrequency(), 0, width);
+      int bandLengthY = (int) map(amplitude, 0, maxAmplitude, 0, height);
 
       stroke(0, 0, 0, 0);
       fill(255);
@@ -44,14 +44,14 @@ final class Visualizer {
   
   private void showAnalyzer() {
     // Establishes relevant X and Y coordinates.
-    int lowerFrequencyX =         (int) (map(analyzer.lowerFrequencyBound,       0, Runtime.maximumVisualFrequency(), 0,      width));
-    int upperFrequencyX =         (int) (map(analyzer.upperFrequencyBound,       0, Runtime.maximumVisualFrequency(), 0,      width));
-    int detectedFrequencyX =      (int) (map(analyzer.frequencyFinderDetection,  0, Runtime.maximumVisualFrequency(), 0,      width));
-    int recordedLoudnessY =       (int) (map(analyzer.recordedLoudness,          0, analyzer.totalMaxLoudness,        height, 0));
-    int triggerLoudnessY =        (int) (map(analyzer.triggerLoudness,           0, analyzer.totalMaxLoudness,        height, 0));
-    int averageLoudnessY =        (int) (map(analyzer.averageLoudness,           0, analyzer.totalMaxLoudness,        height, 0));
-    int recentMaxLoudnessY =      (int) (map(analyzer.recentMaxLoudness,         0, analyzer.totalMaxLoudness,        height, 0));
-    int minimumTriggerLoudnessY = (int) (map(analyzer.minimumTriggerLoudness,    0, analyzer.totalMaxLoudness,        height, 0));
+    int lowerFrequencyX =         (int) map(analyzer.lowerFrequencyBound,       0, Runtime.maximumVisualFrequency(), 0,      width);
+    int upperFrequencyX =         (int) map(analyzer.upperFrequencyBound,       0, Runtime.maximumVisualFrequency(), 0,      width);
+    int detectedFrequencyX =      (int) map(analyzer.frequencyFinderDetection,  0, Runtime.maximumVisualFrequency(), 0,      width);
+    int recordedLoudnessY =       (int) map(analyzer.recordedLoudness,          0, analyzer.totalMaxLoudness,        height, 0);
+    int triggerLoudnessY =        (int) map(analyzer.triggerLoudness,           0, analyzer.totalMaxLoudness,        height, 0);
+    int averageLoudnessY =        (int) map(analyzer.averageLoudness,           0, analyzer.totalMaxLoudness,        height, 0);
+    int recentMaxLoudnessY =      (int) map(analyzer.recentMaxLoudness,         0, analyzer.totalMaxLoudness,        height, 0);
+    int minimumTriggerLoudnessY = (int) map(analyzer.minimumTriggerLoudness,    0, analyzer.totalMaxLoudness,        height, 0);
     
     // Draws the frequency range in magenta.
     fill(255, 0, 200, 80);
@@ -87,15 +87,15 @@ final class Visualizer {
     noStroke();
   
     Map<Integer, Integer> laserStates = lasers.lastOutput;
-    List<Integer> lasers = new ArrayList<Integer>(laserStates.keySet());
-    Collections.sort(lasers);
+    List<Integer> lasersIdentifiers = new ArrayList<Integer>(laserStates.keySet());
+    Collections.sort(lasersIdentifiers);
  
-    int paneWidth = Math.round(width / max(lasers.size(), 1)); 
+    int paneWidth = Math.round(width / max(lasersIdentifiers.size(), 1)); 
       
-    for (int laserIndex = 0; laserIndex < lasers.size(); laserIndex++) {
-      int state = laserStates.get(lasers.get(laserIndex));
+    for (int laserIndex = 0; laserIndex < lasersIdentifiers.size(); laserIndex++) {
+      int state = laserStates.get(lasersIdentifiers.get(laserIndex));
       
-      fill((state == Arduino.HIGH) ? #DDDD00 : #323232);
+      fill((state == Arduino.HIGH) ? (lasers.timedOut ? #444400 : #DDDD00) : #323232);
       rect(laserIndex * paneWidth, 0, paneWidth, 35);
     }
   }
