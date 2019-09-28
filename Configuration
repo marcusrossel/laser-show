@@ -1,4 +1,9 @@
 Use Buzzer: false
+Use Start Date: false
+Use End Date: false
+
+Start Date: 05.10 @ 22.30 
+End Date: 06.10 @ 12.00
 
 Buzzer Pin: 12
 Buzzer Duration: 8 // in seconds

@@ -82,7 +82,22 @@ final class Configuration {
 
   // Converts a given string to a value following certain parsing rules. If this fails, null is returned.
   private Object valueFromString(String string) {
-    if (string.contains(".")) {
+    if (string.contains("@")) {
+      String[] dateAndTime = string.split("@");
+      String[] dayAndMonth = dateAndTime[0].split(".");
+      String[] hourAndMinute = dateAndTime[1].split(".");
+      
+      int day = Integer.parseInt(dayAndMonth[0].trim());
+      int month = Integer.parseInt(dayAndMonth[1].trim());
+      int hour = Integer.parseInt(hourAndMinute[0].trim());
+      int minute = Integer.parseInt(hourAndMinute[1].trim());
+      
+      Calendar calendar = Calendar.getInstance();
+      calendar.set(year(), month, day, hour, minute, 0);
+      
+      return calendar.getTime();
+      
+    } else if (string.contains(".")) {
       return Float.parseFloat(string);
     
     } else if (string.contains("%")) {
@@ -100,6 +115,7 @@ final class Configuration {
 
     } else if (string.equals("true") || string.equals("false")) { 
       return Boolean.parseBoolean(string);
+      
     } else {
       return Integer.parseInt(string);
     }

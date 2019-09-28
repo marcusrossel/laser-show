@@ -36,6 +36,10 @@ static Configuration configuration;
 
 static final class Runtime {
   static boolean useBuzzer() {             return (boolean)            configuration.valueForTrait("Use Buzzer")                   ; }
+  static boolean useStartDate() {          return (boolean)            configuration.valueForTrait("Use Start Date")               ; }
+  static boolean useEndDate() {            return (boolean)            configuration.valueForTrait("Use End Date")                 ; }
+  static Date startDate() {                return (Date)               configuration.valueForTrait("Start Date")                   ; }
+  static Date endDate() {                  return (Date)               configuration.valueForTrait("End Date")                     ; }
   static int buzzerPin() {                 return (int)                configuration.valueForTrait("Buzzer Pin")                   ; }
   static int buzzerDuration() {            return (int)                configuration.valueForTrait("Buzzer Duration")              ; }
   static List<Integer> ledRedPins() {      return (ArrayList<Integer>) configuration.valueForTrait("LED Red Pins")                 ; }
@@ -87,8 +91,13 @@ Visualizer visualizer = new Visualizer();
 
 
 void draw() {
+  // Start and end time gate keepers.
+  Date now = new Date();
+  if (Runtime.useStartDate() && Runtime.startDate().after(now)) { return; }
+  if (Runtime.useEndDate() && Runtime.endDate().before(now)) { exit(); }
+  
   // Updates the LEDs and the buzzer first, as they are audio-independant.
-  leds.update();
+  leds.update();  
   if (Runtime.useBuzzer()) { buzzer.update(); }
   
   // Gets the next audio chunk from the line-in and FFTs it.
