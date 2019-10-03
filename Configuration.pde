@@ -84,8 +84,8 @@ final class Configuration {
   private Object valueFromString(String string) {
     if (string.contains("@")) {
       String[] dateAndTime = string.split("@");
-      String[] dayAndMonth = dateAndTime[0].split(".");
-      String[] hourAndMinute = dateAndTime[1].split(".");
+      String[] dayAndMonth = dateAndTime[0].split("\\.");
+      String[] hourAndMinute = dateAndTime[1].split("\\.");
       
       int day = Integer.parseInt(dayAndMonth[0].trim());
       int month = Integer.parseInt(dayAndMonth[1].trim());
@@ -93,7 +93,7 @@ final class Configuration {
       int minute = Integer.parseInt(hourAndMinute[1].trim());
       
       Calendar calendar = Calendar.getInstance();
-      calendar.set(year(), month, day, hour, minute, 0);
+      calendar.set(year(), month - 1, day, hour, minute, 0);
       
       return calendar.getTime();
       

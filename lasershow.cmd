@@ -1,0 +1,1 @@
+"%cd%\..\processing-3.5.3-windows64\processing-java.exe" --sketch="%cd%\..\lasershow" --run "%cd%\..\lasershow\Configuration.cfg" COM3

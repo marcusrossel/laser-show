@@ -18,7 +18,6 @@ import cc.arduino.*;
 
 //-STATE-OBJECTS-----------------------------------------------------//
 
-
 enum InputSource {
   none, analyzer, mouse
 }
@@ -166,7 +165,7 @@ void setup() {
     println("Error: `Lightshow.pde` didn't receive the correct number of command line arguments");
     System.exit(1); 
   }
-  
+
   // Initializes the Arduino's pins.
   // TODO: Move this task to components' init methods.
   arduino.pinMode(Runtime.buzzerPin(), Arduino.INPUT);
@@ -186,13 +185,15 @@ void setup() {
 //-TEARDOWN----------------------------------------------------------//
 
 
-void stop() {
-  lineIn.close();
-  minim.stop();
-  super.stop();
+void exit() {
+  if (lineIn != null) { lineIn.close(); }
+  if (minim != null) { minim.stop(); }
   
-  // Shuts off the lasers when the program quits.
-  for (int pin : Runtime.laserPins()) {
-    arduino.digitalWrite(pin, Arduino.LOW);
+  if (arduino != null) { 
+    for (int pin : Runtime.laserPins()) {
+      arduino.digitalWrite(pin, Arduino.LOW);
+    }
   }
+  
+  super.exit();
 }
