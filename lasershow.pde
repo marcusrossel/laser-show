@@ -93,7 +93,13 @@ void draw() {
   // Start and end time gate keepers.
   Date now = new Date();
   if (Runtime.useStartDate() && Runtime.startDate().after(now)) { return; }
-  if (Runtime.useEndDate() && Runtime.endDate().before(now)) { exit(); }
+  if (Runtime.useEndDate() && Runtime.endDate().before(now)) {
+    // The semantics of `exit` are rather weird. It seems to run the
+    // `exit` method (overriden below) and afterwards the `draw` method
+    // for one last time before finally exiting.  
+    exit(); 
+    return;
+  }
   
   // Updates the LEDs and the buzzer first, as they are audio-independant.
   leds.update();  
