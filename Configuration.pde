@@ -42,7 +42,7 @@ final class Configuration {
   // Wraps `mapFromConfiguration` to be runtime configuration file specific.
   // It also swallows exceptions and makes sure the `timeOfLastRefresh` is set.
   private void updateRuntimeTraitConfiguration() {
-    try { runtimeTraits = mapFromConfiguration(configurationFile); } catch (Exception e) { /* This is ok. */ }
+    try { runtimeTraits = mapFromConfiguration(configurationFile); } catch (Exception e) { /* This is ok. */ }    
     timeOfLastRefresh = millis();
   }
 
@@ -69,7 +69,7 @@ final class Configuration {
       Object value = valueFromString(traitValue);
 
       // "Configuration Read Cycle" is a reserved trait name which is used to change the refresh interval of a configuration object.
-      if (traitIdentifier == "Configuration Read Cycle") {
+      if (traitIdentifier.equals("Configuration Read Cycle")) {
         millisecondsToRefresh = Math.round((float) value * 1000);
       } else {
         map.put(traitIdentifier, value);
