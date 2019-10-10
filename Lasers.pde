@@ -121,4 +121,10 @@ final class Lasers {
       arduino.digitalWrite(pinStatePair.getKey(), pinStatePair.getValue());   
     }
   }
+  
+  // For debugging.
+  void printMemoryUsage() {
+    println("last output:\t", lastOutput.size());
+    println("pattern history:\t", patternHistory.size());
+  }
 }

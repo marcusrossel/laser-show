@@ -90,7 +90,7 @@ final class Analyzer {
   }
   
   // For debugging.
-  private void printState() {
+  void printState() {
     println();
     println("Recorded Loudness:\t\t", (int) recordedLoudness);
     println("Trigger Loudness:\t\t", (int) triggerLoudness);
@@ -103,5 +103,15 @@ final class Analyzer {
     println("Frequency Finder Detection:\t", (int) frequencyFinderDetection);
     println("Did Trigger (On Last Chunk):\t", didTrigger, "(" + didTriggerOnLastChunk + ")");
     println("Fired:\t\t\t\t", fired());
+  }
+  
+  // For debugging.
+  void printMemoryUsage() {
+    print("loudness history:\t");
+    loudnessHistory.printMemoryUsage();
+    print("max loudness history:\t");
+    maxLoudnessHistory.printMemoryUsage();
+    print("frequency finder:\t");
+    frequencyFinder.printMemoryUsage();
   }
 }

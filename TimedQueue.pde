@@ -66,4 +66,9 @@ final class TimedQueue {
     
     return max;
   }
+  
+  // For debugging.
+  void printMemoryUsage() {
+    println("values: ", values.size(), ",\ttime stamps: ", timeStamps.size());  
+  }
 }

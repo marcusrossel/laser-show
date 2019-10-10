@@ -27,4 +27,10 @@ final class FrequencyFinder {
     
     return (loudestBand + 1) * fft.getBandWidth();
   }
+  
+  // For debugging.
+  void printMemoryUsage() {
+    print("history:\t");
+    history.printMemoryUsage();
+  }
 }
