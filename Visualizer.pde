@@ -86,17 +86,16 @@ final class Visualizer {
     // Draws the trigger pane.
     noStroke();
   
-    Map<Integer, Integer> laserStates = lasers.lastOutput;
-    List<Integer> lasersIdentifiers = new ArrayList<Integer>(laserStates.keySet());
-    Collections.sort(lasersIdentifiers);
- 
-    int paneWidth = Math.round(width / max(lasersIdentifiers.size(), 1)); 
+    Set<Integer> highLasers = lasers.lastOutput;
+    
+    int spacing = 5;
+    int paneWidth = Math.round((width - spacing) / max(Runtime.laserPins().size(), 1));
       
-    for (int laserIndex = 0; laserIndex < lasersIdentifiers.size(); laserIndex++) {
-      int state = laserStates.get(lasersIdentifiers.get(laserIndex));
+    for (int laser = 0; laser < Runtime.laserPins().size(); laser++) {
+      if (!highLasers.contains(laser)) { continue; }
       
-      fill((state == Arduino.HIGH) ? (lasers.timedOut ? #444400 : #DDDD00) : #323232);
-      rect(laserIndex * paneWidth, 0, paneWidth, 35);
+      fill(lasers.timedOut ? #87712B : #FEE12B);
+      rect((laser * paneWidth) + spacing, spacing, paneWidth - spacing, 35, 7);
     }
   }
 
@@ -109,7 +108,7 @@ final class Visualizer {
     }
     
     fill(255);    
-    text("Inputquelle: " + stateString, 10, 60);
+    text("Inputquelle: " + stateString, 10, 70);
     
     if (State.inputSource == InputSource.mouse) {     
       switch (State.mouseMode) {

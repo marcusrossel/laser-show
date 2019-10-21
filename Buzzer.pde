@@ -3,6 +3,10 @@ final class Buzzer {
   private int lastBuzz = 0;
   private int lastRead = 0;
   
+  void init() {
+    arduino.pinMode(Runtime.buzzerPin(), Arduino.INPUT);
+  }
+  
   void update() {        
     updateMechanics();
     updateState();

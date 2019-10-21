@@ -11,7 +11,7 @@ final class Configuration {
   private int timeOfLastRefresh;
   private int millisecondsToRefresh; // aka refresh interval
 
-  public Configuration(Path configurationFile) {
+  Configuration(Path configurationFile) {
     this.configurationFile = configurationFile;
     timeOfLastRefresh = 0;
     millisecondsToRefresh = 0;
@@ -27,7 +27,7 @@ final class Configuration {
   }
 
   // Returns the value for the trait with a given name.
-  public Object valueForTrait(String trait) {    
+  Object valueForTrait(String trait) {    
     // Refreshes the runtime trait map if the refresh interval has been passed.
     if ((millis() - timeOfLastRefresh) > millisecondsToRefresh) {
       updateRuntimeTraitConfiguration();
@@ -110,7 +110,7 @@ final class Configuration {
 
       String bareIntList = string.substring(1, string.length() - 1);
       String[] intElements = bareIntList.split(",");
-      for (String element: intElements) { intList.add(Integer.parseInt(element.trim())); }
+      for (String element : intElements) { intList.add(Integer.parseInt(element.trim())); }
       return intList;
 
     } else if (string.equals("true") || string.equals("false")) { 
@@ -119,5 +119,11 @@ final class Configuration {
     } else {
       return Integer.parseInt(string);
     }
+  }
+  
+  // For debugging.
+  void printMemoryUsage() {
+    println("static traits:\t" + staticTraits.size());
+    println("runtime traits:\t" + runtimeTraits.size());
   }
 }

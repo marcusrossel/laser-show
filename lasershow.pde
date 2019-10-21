@@ -89,7 +89,7 @@ Visualizer visualizer = new Visualizer();
 //-RUN-LOOP----------------------------------------------------------//
 
 
-void draw() {
+void draw() {  
   // Start and end time gate keepers.
   Date now = new Date();
   if (Runtime.useStartDate() && Runtime.startDate().after(now)) { return; }
@@ -126,7 +126,7 @@ void mouseWheel(MouseEvent event) {
   if (State.inputSource != InputSource.mouse) { return; }
   State.mouseMode = MouseMode.wheel;
   
-  lasers.processStep(max(min(event.getCount(), 1), -1));
+  lasers.processStep(event.getCount());
 }
 
 void mousePressed() {
@@ -139,6 +139,26 @@ void mousePressed() {
   } else if (mouseButton != LEFT && mouseButton != RIGHT) {
     State.inputSource = InputSource.mouse;
     State.mouseMode = MouseMode.wheel;
+  }
+}
+
+// Simulates mouse interactions.
+void keyPressed() {
+  if (key == ' ') {
+    mouseButton = CENTER;
+    mousePressed();
+  } else if (keyCode == LEFT) {
+    mouseButton = LEFT;
+    mousePressed(); 
+  } else if (keyCode == RIGHT) {
+    mouseButton = RIGHT;
+    mousePressed();
+  } else if (keyCode == UP) {
+    MouseEvent event = new MouseEvent(null, millis(), MouseEvent.WHEEL, -1, 0, 0, 0, +1);
+    mouseWheel(event);
+  } else if (keyCode == DOWN) {
+    MouseEvent event = new MouseEvent(null, millis(), MouseEvent.WHEEL, -1, 0, 0, 0, -1);
+    mouseWheel(event);
   }
 }
 
@@ -171,20 +191,10 @@ void setup() {
     println("Error: `Lightshow.pde` didn't receive the correct number of command line arguments");
     System.exit(1); 
   }
-
-  // Initializes the Arduino's pins.
-  // TODO: Move this task to components' init methods.
-  arduino.pinMode(Runtime.buzzerPin(), Arduino.INPUT);
   
-  List<Integer> allOutputPins = new ArrayList();
-  allOutputPins.addAll(Runtime.ledRedPins());
-  allOutputPins.addAll(Runtime.ledGreenPins());
-  allOutputPins.addAll(Runtime.ledBluePins());
-  allOutputPins.addAll(Runtime.laserPins());
-  
-  for (int pin: allOutputPins) {
-    arduino.pinMode(pin, Arduino.OUTPUT);  
-  }
+  buzzer.init();
+  leds.init();
+  lasers.init();
 }
 
 
@@ -202,4 +212,18 @@ void exit() {
   }
   
   super.exit();
+}
+
+
+//-DEBUGGING---------------------------------------------------------//
+
+
+void printMemoryUsage() {
+  println("# Analyzer:");
+  analyzer.printMemoryUsage();
+  println("# Configuration:");
+  configuration.printMemoryUsage();
+  println("# Lasers:");
+  lasers.printMemoryUsage();
+  println();
 }

@@ -17,6 +17,17 @@ final class LEDs {
   private int[] currentColor = {0, 0, 0};
   private int[] targetColor = {0, 0, 0};
   
+  void init() {
+    List<Integer> allOutputPins = new ArrayList();
+    allOutputPins.addAll(Runtime.ledRedPins());
+    allOutputPins.addAll(Runtime.ledGreenPins());
+    allOutputPins.addAll(Runtime.ledBluePins()); 
+    
+    for (int pin : allOutputPins) {
+      arduino.pinMode(pin, Arduino.OUTPUT);  
+    }
+  }
+  
   void update() {    
     // Shows the color red when the input source is the mouse.
     if (State.inputSource == InputSource.mouse) {
