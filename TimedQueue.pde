@@ -10,19 +10,19 @@ final class TimedQueue {
   // This property is supposed to be setable.
   float retentionDuration; // in seconds
 
-  private List<Float> relevantHistory() {
-    if (timeStamps.isEmpty()) { return new ArrayList<Float>(); }
+  private int startOfRelevantHistory() {
+    if (timeStamps.isEmpty()) { return -1; }
     
     int now = millis();
 
-    // Gets the index of the oldest time stamp not older than the retention duration. If there is none, an empty array is returned.
+    // Gets the index of the oldest time stamp not older than the retention duration. If there is none, -1 is returned.
     int index = 0;
     while (now - timeStamps.get(index) > retentionDuration * 1000) {
       index++;
-      if (index == timeStamps.size()) { return new ArrayList<Float>(); }
+      if (index == timeStamps.size()) { return -1; }
     }
-
-    return values.subList(index, values.size() - 1);
+    
+    return index;
   }
 
   void push(float value) {
@@ -37,34 +37,58 @@ final class TimedQueue {
       // Removes the values only if the oldest recorded value is at least (2 * retention duration) old.
       // The factor 1000 converts the rentation duration from seconds to milliseconds. 
       if (now - timeStamps.get(0) > (2 * retentionDuration * 1000)) {
-        values = relevantHistory();
-        timeStamps = timeStamps.subList(timeStamps.size() - values.size() - 1, timeStamps.size() - 1);
+        int startIndex = startOfRelevantHistory();
+    
+        if (startIndex < 0) {
+          values = new ArrayList();
+          timeStamps = new ArrayList();
+        } else {
+          values = values.subList(startIndex, values.size() - 1);
+          timeStamps = timeStamps.subList(startIndex, timeStamps.size() - 1);
+        }
       }
     }
   }
     
   float average() {
-    List<Float> currentHistory = relevantHistory();
-    if (currentHistory.isEmpty()) { return 0f; }
+    int startIndex = startOfRelevantHistory();
+    if (startIndex < 0) { return 0; }
+  
+    int sizeOfRelevantHistory = values.size() - startIndex;
 
     float sum = 0f;
-    for (float value : currentHistory) {
-      sum += value;
+    for (int index = startIndex; index < values.size(); index++) {
+      sum += values.get(index);
     }
     
-    return sum / currentHistory.size();
+    return sum / sizeOfRelevantHistory;
   }
   
   float max() {
-    List<Float> currentHistory = relevantHistory();
-    if (currentHistory.isEmpty()) { return 0f; }
+    int startIndex = startOfRelevantHistory();
+    if (startIndex < 0) { return 0; }
     
     float max = 0f;
-    for (float value : currentHistory) {
-      max = Math.max(max, value); 
+    for (int index = startIndex; index < values.size(); index++) {
+      max = Math.max(max, values.get(index)); 
     }
     
     return max;
+  }
+  
+  float averageMillisBetweenElements() {
+    int startIndex = startOfRelevantHistory();
+    if (startIndex < 0) { return 0; }
+    
+    int numberOfRelevantTimeStamps = timeStamps.size() - startIndex;
+    if (numberOfRelevantTimeStamps < 2) { return 0; }
+    
+    int sum = 0;
+    for (int index = startIndex + 1; index < timeStamps.size(); index++) {
+      sum += (timeStamps.get(index) - timeStamps.get(index - 1));
+    }
+    
+    return ((float) sum) / numberOfRelevantTimeStamps;
   }
   
   // For debugging.

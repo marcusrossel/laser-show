@@ -1,3 +1,5 @@
+// TODO: Automatically detect the frequency range as well.
+
 final class FrequencyFinder {
   
   TimedQueue history = new TimedQueue(0f);

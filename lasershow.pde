@@ -55,9 +55,11 @@ static final class Runtime {
   static int frequencyRange() {            return (int)                configuration.valueForTrait("Frequency Range")              ; }
   static int frequencyFinderMaximum() {    return (int)                configuration.valueForTrait("Frequency Finder Maximum")     ; }
   static float frequencyFinderHistory() {  return (float)              configuration.valueForTrait("Frequency Finder History")     ; }
+  static float bpmFinderHistory() {        return (float)              configuration.valueForTrait("BPM-Finder History")           ; }
   static boolean visualizeSpectrum() {     return (boolean)            configuration.valueForTrait("Visualize Spectrum")           ; }
   static boolean visualizeState() {        return (boolean)            configuration.valueForTrait("Visualize State")              ; }
   static boolean visualizeAnalyzer() {     return (boolean)            configuration.valueForTrait("Visualize Analyzer")           ; }
+  static boolean visualizeBPMFinder() {    return (boolean)            configuration.valueForTrait("Visualize BPM Finder")         ; }
   static int maximumVisualFrequency() {    return (int)                configuration.valueForTrait("Highest Visualized Frequency") ; }
 }
 
@@ -83,6 +85,7 @@ Lasers lasers = new Lasers();
 
 
 Analyzer analyzer = new Analyzer();
+BPMFinder bpmFinder = new BPMFinder();
 Visualizer visualizer = new Visualizer();
 
 
@@ -90,7 +93,7 @@ Visualizer visualizer = new Visualizer();
 
 
 void draw() {  
-  // Start and end time gate keepers.
+  // Start- and end-time gate-keepers.
   Date now = new Date();
   if (Runtime.useStartDate() && Runtime.startDate().after(now)) { return; }
   if (Runtime.useEndDate() && Runtime.endDate().before(now)) {
@@ -111,7 +114,8 @@ void draw() {
   // Updates the analyzer's state with the current audio chunk.
   analyzer.processChunk(fft);
   
-  // Updates the lasers according to the analyzer's state.
+  // Updates the bpm-finder and lasers according to the analyzer's state.
+  if (analyzer.fired()) { bpmFinder.recordFiring(); }
   lasers.processStep((State.inputSource == InputSource.analyzer && analyzer.fired()) ? 1 : 0);
   
   // Updates the visualization according to all new state.

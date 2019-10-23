@@ -4,14 +4,15 @@ final class Visualizer {
   float maxAmplitude = 0f;
   
   void init() {
-    textFont(createFont("Helvetica", 30, true));  
+    textFont(createFont("Helvetica Neue", 24, true));  
   }
   
   void update(FFT chunk) {
     background(0);
-    if (Runtime.visualizeSpectrum()) { showSpectrum(chunk); }
-    if (Runtime.visualizeAnalyzer()) { showAnalyzer(); }
-    if (Runtime.visualizeState())    { showState(); }
+    if (Runtime.visualizeSpectrum())  { showSpectrum(chunk); }
+    if (Runtime.visualizeAnalyzer())  { showAnalyzer(); }
+    if (Runtime.visualizeBPMFinder()) { showBPM(); }
+    if (Runtime.visualizeState())     { showState(); }
   }
   
   private void showSpectrum(FFT chunk) {
@@ -97,6 +98,14 @@ final class Visualizer {
       fill(lasers.timedOut ? #87712B : #FEE12B);
       rect((laser * paneWidth) + spacing, spacing, paneWidth - spacing, 35, 7);
     }
+  }
+  
+  private void showBPM() {
+    String bpm = String.format("%.02f", bpmFinder.estimatedBPM());
+    String delay = String.format("%.02fms", bpmFinder.averageFiringDelay());
+    
+    fill(255);
+    text("Geschätzte BPM: " + bpm + " (Δt = " + delay + ")", 10, 150);
   }
 
   private void showState() {
