@@ -101,11 +101,12 @@ final class Visualizer {
   }
   
   private void showBPM() {
-    String bpm = String.format("%.02f", bpmFinder.estimatedBPM());
-    String delay = String.format("%.02fms", bpmFinder.averageFiringDelay());
-    
     fill(255);
-    text("Geschätzte BPM: " + bpm + " (Δt = " + delay + ")", 10, 150);
+    text("Geschätzte BPM: " + (int) bpmFinder.estimatedBPM() +
+         " (Δt = " + (int) bpmFinder.averageFiringDelay() +
+         "ms) (MAD = " + (int) bpmFinder.meanAbsoluteDeviation() +
+         "ms = " + String.format("%.2f", 100 * bpmFinder.relativeDeviation()) + "%)",
+         10, 150);
   }
 
   private void showState() {

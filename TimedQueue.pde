@@ -24,6 +24,13 @@ final class TimedQueue {
     
     return index;
   }
+  
+  List<Integer> getTimeStamps() {
+    int startIndex = startOfRelevantHistory();
+    if (startIndex < 0) { return new ArrayList<Integer>(); }
+    
+    return timeStamps.subList(startIndex, timeStamps.size() - 1);
+  }
 
   void push(float value) {
     int now = millis();
@@ -74,21 +81,6 @@ final class TimedQueue {
     }
     
     return max;
-  }
-  
-  float averageMillisBetweenElements() {
-    int startIndex = startOfRelevantHistory();
-    if (startIndex < 0) { return 0; }
-    
-    int numberOfRelevantTimeStamps = timeStamps.size() - startIndex;
-    if (numberOfRelevantTimeStamps < 2) { return 0; }
-    
-    int sum = 0;
-    for (int index = startIndex + 1; index < timeStamps.size(); index++) {
-      sum += (timeStamps.get(index) - timeStamps.get(index - 1));
-    }
-    
-    return ((float) sum) / numberOfRelevantTimeStamps;
   }
   
   // For debugging.

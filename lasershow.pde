@@ -56,6 +56,8 @@ static final class Runtime {
   static int frequencyFinderMaximum() {    return (int)                configuration.valueForTrait("Frequency Finder Maximum")     ; }
   static float frequencyFinderHistory() {  return (float)              configuration.valueForTrait("Frequency Finder History")     ; }
   static float bpmFinderHistory() {        return (float)              configuration.valueForTrait("BPM-Finder History")           ; }
+  static float bpmFinderSmoothingDelay() { return (float)              configuration.valueForTrait("BPM-Finder Smoothing Delay")   ; }
+  static float maximumBPMPatternMAD() {    return (float)              configuration.valueForTrait("Maximum BPM-Pattern MAD")      ; }
   static boolean visualizeSpectrum() {     return (boolean)            configuration.valueForTrait("Visualize Spectrum")           ; }
   static boolean visualizeState() {        return (boolean)            configuration.valueForTrait("Visualize State")              ; }
   static boolean visualizeAnalyzer() {     return (boolean)            configuration.valueForTrait("Visualize Analyzer")           ; }
@@ -229,5 +231,7 @@ void printMemoryUsage() {
   configuration.printMemoryUsage();
   println("# Lasers:");
   lasers.printMemoryUsage();
+  println("# BPM-Finder:");
+  bpmFinder.printMemoryUsage();
   println();
 }
