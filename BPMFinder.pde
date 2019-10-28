@@ -5,13 +5,17 @@ final class BPMFinder {
   private boolean didSmoothDelay = false;
   
   private TimedQueue triggerHistory = new TimedQueue(0f);
+  private TimedQueue deviationHistory = new TimedQueue(0f);
   
   void recordFiring() {
-    triggerHistory.retentionDuration = Runtime.bpmFinderHistory();
-    triggerHistory.push(someFloat);  
+    triggerHistory.push(someFloat); 
+    deviationHistory.push(relativeDeviation());
   }
   
   float averageFiringDelay() {
+    triggerHistory.retentionDuration = Runtime.bpmFinderDelayHistory();
+    deviationHistory.retentionDuration = Runtime.bpmFinderDeviationHistory();
+    
     List<Integer> timeStamps = triggerHistory.getTimeStamps();
     if (timeStamps.size() < 2) { return 0; }
        
@@ -70,6 +74,10 @@ final class BPMFinder {
   float relativeDeviation() {
     float averageDelay = averageFiringDelay();
     return (averageDelay != 0) ? (meanAbsoluteDeviation() / averageDelay) : 1;   
+  }
+  
+  float averageRelativeDeviation() {
+    return deviationHistory.average();
   }
   
   // For debugging.

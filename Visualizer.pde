@@ -11,8 +11,16 @@ final class Visualizer {
     background(0);
     if (Runtime.visualizeSpectrum())  { showSpectrum(chunk); }
     if (Runtime.visualizeAnalyzer())  { showAnalyzer(); }
-    if (Runtime.visualizeBPMFinder()) { showBPM(); }
+    if (Runtime.visualizeBPMFinder()) { showBPMAnalysis(); }
     if (Runtime.visualizeState())     { showState(); }
+  }
+  
+  private int adjustedWidth() {
+    if (Runtime.useBPMFinder() && State.inputSource == InputSource.analyzer) {
+      return (int) (0.95 * width);  
+    } else {
+      return width;  
+    }
   }
   
   private void showSpectrum(FFT chunk) {
@@ -20,12 +28,12 @@ final class Visualizer {
     strokeWeight(1);
     for (int frequency = 100; frequency < Runtime.maximumVisualFrequency(); frequency += 100) {
       if (frequency % 500 == 0) { stroke(100); } else { stroke(40); };
-      int x = (int) map(frequency, 0, Runtime.maximumVisualFrequency(), 0, width);
+      int x = (int) map(frequency, 0, Runtime.maximumVisualFrequency(), 0, adjustedWidth());
       line(x, 0, x, height); 
     }
     
     int bandCount = (int) ((float) Runtime.maximumVisualFrequency() / chunk.getBandWidth());
-    int bandLengthX = width / bandCount;
+    int bandLengthX = adjustedWidth() / bandCount;
 
     // Draws the band intensities.
     for (int band = 0; band <= bandCount; band++) {
@@ -34,7 +42,7 @@ final class Visualizer {
       
       maxAmplitude = max(maxAmplitude, amplitude);
 
-      int bandStartX = (int) map(frequency, 0, Runtime.maximumVisualFrequency(), 0, width);
+      int bandStartX = (int) map(frequency, 0, Runtime.maximumVisualFrequency(), 0, adjustedWidth());
       int bandLengthY = (int) map(amplitude, 0, maxAmplitude, 0, height);
 
       stroke(0, 0, 0, 0);
@@ -45,9 +53,9 @@ final class Visualizer {
   
   private void showAnalyzer() {
     // Establishes relevant X and Y coordinates.
-    int lowerFrequencyX =         (int) map(analyzer.lowerFrequencyBound,       0, Runtime.maximumVisualFrequency(), 0,      width);
-    int upperFrequencyX =         (int) map(analyzer.upperFrequencyBound,       0, Runtime.maximumVisualFrequency(), 0,      width);
-    int detectedFrequencyX =      (int) map(analyzer.frequencyFinderDetection,  0, Runtime.maximumVisualFrequency(), 0,      width);
+    int lowerFrequencyX =         (int) map(analyzer.lowerFrequencyBound,       0, Runtime.maximumVisualFrequency(), 0,      adjustedWidth());
+    int upperFrequencyX =         (int) map(analyzer.upperFrequencyBound,       0, Runtime.maximumVisualFrequency(), 0,      adjustedWidth());
+    int detectedFrequencyX =      (int) map(analyzer.frequencyFinderDetection,  0, Runtime.maximumVisualFrequency(), 0,      adjustedWidth());
     int recordedLoudnessY =       (int) map(analyzer.recordedLoudness,          0, analyzer.totalMaxLoudness,        height, 0);
     int triggerLoudnessY =        (int) map(analyzer.triggerLoudness,           0, analyzer.totalMaxLoudness,        height, 0);
     int averageLoudnessY =        (int) map(analyzer.averageLoudness,           0, analyzer.totalMaxLoudness,        height, 0);
@@ -66,23 +74,23 @@ final class Visualizer {
     // Draws the recorded loudness in white.
     strokeWeight(4);
     stroke(255, 255, 255);
-    line(0, recordedLoudnessY, width, recordedLoudnessY);
+    line(0, recordedLoudnessY, adjustedWidth(), recordedLoudnessY);
 
     // Draws the average loudness in red.
     stroke(255, 0, 0, 100);
-    line(0, averageLoudnessY, width, averageLoudnessY);
+    line(0, averageLoudnessY, adjustedWidth(), averageLoudnessY);
 
     // Draws the trigger loudness in green.
     stroke(0, 255, 0);
-    line(0, triggerLoudnessY, width, triggerLoudnessY);
+    line(0, triggerLoudnessY, adjustedWidth(), triggerLoudnessY);
     
     // Draws the recent maximum loudness in grey.
     stroke(100);
-    line(0, recentMaxLoudnessY, width, recentMaxLoudnessY);
+    line(0, recentMaxLoudnessY, adjustedWidth(), recentMaxLoudnessY);
 
     // Draws the minimum trigger loudness in blue.
     stroke(0, 0, 255, 100);
-    line(0, minimumTriggerLoudnessY, width, minimumTriggerLoudnessY);
+    line(0, minimumTriggerLoudnessY, adjustedWidth(), minimumTriggerLoudnessY);
     
     // Draws the trigger pane.
     noStroke();
@@ -90,7 +98,7 @@ final class Visualizer {
     Set<Integer> highLasers = lasers.lastOutput;
     
     int spacing = 5;
-    int paneWidth = Math.round((width - spacing) / max(Runtime.laserPins().size(), 1));
+    int paneWidth = Math.round((adjustedWidth() - spacing) / max(Runtime.laserPins().size(), 1));
       
     for (int laser = 0; laser < Runtime.laserPins().size(); laser++) {
       if (!highLasers.contains(laser)) { continue; }
@@ -100,13 +108,37 @@ final class Visualizer {
     }
   }
   
-  private void showBPM() {
+  private void showBPMAnalysis() {
+    // Establishes relevant X and Y coordinates.
+    float averageDeviation = bpmFinder.averageRelativeDeviation();
+    int averageDeviationY = (int) map(averageDeviation, 1, 0, height, 0);
+    int deviationTargetY = (int) map(Runtime.maximumBPMPatternMAD(), 1, 0, height, 0);
+          
+    // Draws the target deviation zone.
+    noStroke();
+    fill(200);
+    rect(adjustedWidth(), 0, width - adjustedWidth(), deviationTargetY);
+    
+    // Draws the average deviation in red to green.
+    fill(255 * averageDeviation * 1.5, 255 * (1 - averageDeviation), 50 * (1 - averageDeviation), 200);
+    rect(adjustedWidth(), averageDeviationY, width - adjustedWidth(), height - averageDeviationY);
+    
+    // Draws 10% marks.
+    stroke(180);
+    strokeWeight(2);
+    for (float percentage = 10; percentage <= 90; percentage += 10) {
+        int y = (int) ((percentage / 100f) * (float) height);
+        line(adjustedWidth(), y, adjustedWidth() + 15, y);
+    }
+    
+    // Draws the BPM-value.
     fill(255);
-    text("Geschätzte BPM: " + (int) bpmFinder.estimatedBPM() +
-         " (Δt = " + (int) bpmFinder.averageFiringDelay() +
-         "ms) (MAD = " + (int) bpmFinder.meanAbsoluteDeviation() +
-         "ms = " + String.format("%.2f", 100 * bpmFinder.relativeDeviation()) + "%)",
-         10, 150);
+    text((int) bpmFinder.estimatedBPM(), adjustedWidth() + 8, height - 20);
+         
+    // Draws a seperator to the rest of the visualizations.
+    stroke(255);
+    strokeWeight(3);
+    line(adjustedWidth(), 0, adjustedWidth(), height);
   }
 
   private void showState() {
