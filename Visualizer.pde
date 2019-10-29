@@ -3,6 +3,11 @@ final class Visualizer {
   // Records the highest intensity of a frequency ever measured.
   float maxAmplitude = 0f;
   
+  // Needed for loudness indicator smoothing.
+  float lastLoudness = 0;
+  float lastLoudnessUpdate = 0;
+  float loudnessUpdateCycle = 80; // 0.08 seconds
+  
   void init() {
     textFont(createFont("Helvetica Neue", 24, true));  
   }
@@ -32,35 +37,40 @@ final class Visualizer {
       line(x, 0, x, height); 
     }
     
-    int bandCount = (int) ((float) Runtime.maximumVisualFrequency() / chunk.getBandWidth());
-    int bandLengthX = adjustedWidth() / bandCount;
+    int bandCount = (int) (((float) Runtime.maximumVisualFrequency()) / chunk.getBandWidth());
+    int bandLengthX = Math.round((float) adjustedWidth() / (float) bandCount);
 
     // Draws the band intensities.
     for (int band = 0; band <= bandCount; band++) {
-      float frequency = chunk.indexToFreq(band);
-      float amplitude = chunk.getBand(band);
+      int xOffset = Math.round((adjustedWidth() - bandLengthX) * band / (float) bandCount);
       
+      float amplitude = chunk.getBand(band);
       maxAmplitude = max(maxAmplitude, amplitude);
-
-      int bandStartX = (int) map(frequency, 0, Runtime.maximumVisualFrequency(), 0, adjustedWidth());
+      
       int bandLengthY = (int) map(amplitude, 0, maxAmplitude, 0, height);
 
-      stroke(0, 0, 0, 0);
+      noStroke();
       fill(255);
-      rect(bandStartX, height - bandLengthY, bandLengthX, bandLengthY);
+      rect(xOffset, height - bandLengthY, bandLengthX, bandLengthY);
     }
   }
   
   private void showAnalyzer() {
+    // Needed for loudness indicator smoothing.
+    if (millis() - lastLoudnessUpdate > loudnessUpdateCycle) {
+      lastLoudness = analyzer.recordedLoudness;
+      lastLoudnessUpdate = millis();
+    }
+    
     // Establishes relevant X and Y coordinates.
-    int lowerFrequencyX =         (int) map(analyzer.lowerFrequencyBound,       0, Runtime.maximumVisualFrequency(), 0,      adjustedWidth());
-    int upperFrequencyX =         (int) map(analyzer.upperFrequencyBound,       0, Runtime.maximumVisualFrequency(), 0,      adjustedWidth());
-    int detectedFrequencyX =      (int) map(analyzer.frequencyFinderDetection,  0, Runtime.maximumVisualFrequency(), 0,      adjustedWidth());
-    int recordedLoudnessY =       (int) map(analyzer.recordedLoudness,          0, analyzer.totalMaxLoudness,        height, 0);
-    int triggerLoudnessY =        (int) map(analyzer.triggerLoudness,           0, analyzer.totalMaxLoudness,        height, 0);
-    int averageLoudnessY =        (int) map(analyzer.averageLoudness,           0, analyzer.totalMaxLoudness,        height, 0);
-    int recentMaxLoudnessY =      (int) map(analyzer.recentMaxLoudness,         0, analyzer.totalMaxLoudness,        height, 0);
-    int minimumTriggerLoudnessY = (int) map(analyzer.minimumTriggerLoudness,    0, analyzer.totalMaxLoudness,        height, 0);
+    int lowerFrequencyX =         (int) map(analyzer.lowerFrequencyBound,      0, Runtime.maximumVisualFrequency(), 0,      adjustedWidth());
+    int upperFrequencyX =         (int) map(analyzer.upperFrequencyBound,      0, Runtime.maximumVisualFrequency(), 0,      adjustedWidth());
+    int detectedFrequencyX =      (int) map(analyzer.frequencyFinderDetection, 0, Runtime.maximumVisualFrequency(), 0,      adjustedWidth());
+    int recordedLoudnessY =       (int) map(lastLoudness,                      0, analyzer.totalMaxLoudness,        height, 0);
+    int triggerLoudnessY =        (int) map(analyzer.triggerLoudness,          0, analyzer.totalMaxLoudness,        height, 0);
+    int averageLoudnessY =        (int) map(analyzer.averageLoudness,          0, analyzer.totalMaxLoudness,        height, 0);
+    int recentMaxLoudnessY =      (int) map(analyzer.recentMaxLoudness,        0, analyzer.totalMaxLoudness,        height, 0);
+    int minimumTriggerLoudnessY = (int) map(analyzer.minimumTriggerLoudness,   0, analyzer.totalMaxLoudness,        height, 0);
     
     // Draws the frequency range in magenta.
     fill(255, 0, 200, 80);
