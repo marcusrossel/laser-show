@@ -34,37 +34,38 @@ static final class State {
 static Configuration configuration;
 
 static final class Runtime {
-  static boolean useBuzzer() {               return (boolean)            configuration.valueForTrait("Use Buzzer")                   ; }
-  static boolean useStartDate() {            return (boolean)            configuration.valueForTrait("Use Start Date")               ; }
-  static boolean useEndDate() {              return (boolean)            configuration.valueForTrait("Use End Date")                 ; }
-  static boolean useBPMFinder() {            return (boolean)            configuration.valueForTrait("Use BPM-Finder")               ; }
-  static Date startDate() {                  return (Date)               configuration.valueForTrait("Start Date")                   ; }
-  static Date endDate() {                    return (Date)               configuration.valueForTrait("End Date")                     ; }
-  static int buzzerPin() {                   return (int)                configuration.valueForTrait("Buzzer Pin")                   ; }
-  static int buzzerDuration() {              return (int)                configuration.valueForTrait("Buzzer Duration")              ; }
-  static List<Integer> ledRedPins() {        return (ArrayList<Integer>) configuration.valueForTrait("LED Red Pins")                 ; }
-  static List<Integer> ledGreenPins() {      return (ArrayList<Integer>) configuration.valueForTrait("LED Green Pins")               ; }
-  static List<Integer> ledBluePins() {       return (ArrayList<Integer>) configuration.valueForTrait("LED Blue Pins")                ; }
-  static List<Integer> laserPins() {         return (ArrayList<Integer>) configuration.valueForTrait("Laser Pins")                   ; }
-  static float maximumLaserOnDuration() {    return (float)              configuration.valueForTrait("Maximum Laser On-Duration")    ; }
-  static int patternHistory() {              return (int)                configuration.valueForTrait("Pattern History")              ; }
-  static int maximumBPM() {                  return (int)                configuration.valueForTrait("Maximum BPM")                  ; }
-  static float triggerThreshold() {          return (float)              configuration.valueForTrait("Trigger Threshold")            ; }
-  static float averageHistory() {            return (float)              configuration.valueForTrait("Average History")              ; }
-  static float maximumLoudnessHistory() {    return (float)              configuration.valueForTrait("Maximum Loudness History")     ; }
-  static float minimalTriggerThreshold() {   return (float)              configuration.valueForTrait("Minimal Trigger Threshold")    ; }
-  static int frequencyRange() {              return (int)                configuration.valueForTrait("Frequency Range")              ; }
-  static int frequencyFinderMaximum() {      return (int)                configuration.valueForTrait("Frequency-Finder Maximum")     ; }
-  static float frequencyFinderHistory() {    return (float)              configuration.valueForTrait("Frequency-Finder History")     ; }
-  static float bpmFinderDelayHistory() {     return (float)              configuration.valueForTrait("BPM-Finder Delay History")     ; }
-  static float bpmFinderDeviationHistory() { return (float)              configuration.valueForTrait("BPM-Finder Deviation History") ; }
-  static float bpmFinderSmoothingDelay() {   return (float)              configuration.valueForTrait("BPM-Finder Smoothing Delay")   ; }
-  static float maximumBPMPatternMAD() {      return (float)              configuration.valueForTrait("Maximum BPM-Pattern MAD")      ; }
-  static boolean visualizeSpectrum() {       return (boolean)            configuration.valueForTrait("Visualize Spectrum")           ; }
-  static boolean visualizeState() {          return (boolean)            configuration.valueForTrait("Visualize State")              ; }
-  static boolean visualizeAnalyzer() {       return (boolean)            configuration.valueForTrait("Visualize Analyzer")           ; }
-  static boolean visualizeBPMFinder() {      return (boolean)            configuration.valueForTrait("Visualize BPM Finder")         ; }
-  static int maximumVisualFrequency() {      return (int)                configuration.valueForTrait("Highest Visualized Frequency") ; }
+  static boolean useBuzzer() {                return (boolean)            configuration.valueForTrait("Use Buzzer")                   ; }
+  static boolean useStartDate() {             return (boolean)            configuration.valueForTrait("Use Start Date")               ; }
+  static boolean useEndDate() {               return (boolean)            configuration.valueForTrait("Use End Date")                 ; }
+  static boolean useBPMFinder() {             return (boolean)            configuration.valueForTrait("Use BPM-Finder")               ; }
+  static Date startDate() {                   return (Date)               configuration.valueForTrait("Start Date")                   ; }
+  static Date endDate() {                     return (Date)               configuration.valueForTrait("End Date")                     ; }
+  static int buzzerPin() {                    return (int)                configuration.valueForTrait("Buzzer Pin")                   ; }
+  static int buzzerDuration() {               return (int)                configuration.valueForTrait("Buzzer Duration")              ; }
+  static List<Integer> ledRedPins() {         return (ArrayList<Integer>) configuration.valueForTrait("LED Red Pins")                 ; }
+  static List<Integer> ledGreenPins() {       return (ArrayList<Integer>) configuration.valueForTrait("LED Green Pins")               ; }
+  static List<Integer> ledBluePins() {        return (ArrayList<Integer>) configuration.valueForTrait("LED Blue Pins")                ; }
+  static List<Integer> laserPins() {          return (ArrayList<Integer>) configuration.valueForTrait("Laser Pins")                   ; }
+  static float maximumLaserOnDuration() {     return (float)              configuration.valueForTrait("Maximum Laser On-Duration")    ; }
+  static int patternHistory() {               return (int)                configuration.valueForTrait("Pattern History")              ; }
+  static int maximumBPM() {                   return (int)                configuration.valueForTrait("Maximum BPM")                  ; }
+  static float triggerThreshold() {           return (float)              configuration.valueForTrait("Trigger Threshold")            ; }
+  static float averageHistory() {             return (float)              configuration.valueForTrait("Average History")              ; }
+  static float maximumLoudnessHistory() {     return (float)              configuration.valueForTrait("Maximum Loudness History")     ; }
+  static float minimalTriggerThreshold() {    return (float)              configuration.valueForTrait("Minimal Trigger Threshold")    ; }
+  static int frequencyRange() {               return (int)                configuration.valueForTrait("Frequency Range")              ; }
+  static int frequencyFinderMaximum() {       return (int)                configuration.valueForTrait("Frequency-Finder Maximum")     ; }
+  static float frequencyFinderHistory() {     return (float)              configuration.valueForTrait("Frequency-Finder History")     ; }
+  static float bpmFinderDelayHistory() {      return (float)              configuration.valueForTrait("BPM-Finder Delay History")     ; }
+  static float bpmFinderDeviationHistory() {  return (float)              configuration.valueForTrait("BPM-Finder Deviation History") ; }
+  static float bpmFinderSmoothingDelay() {    return (float)              configuration.valueForTrait("BPM-Finder Smoothing Delay")   ; }
+  static float maximumBPMPatternMAD() {       return (float)              configuration.valueForTrait("Maximum BPM-Pattern MAD")      ; }
+  static boolean visualizeSpectrum() {        return (boolean)            configuration.valueForTrait("Visualize Spectrum")           ; }
+  static boolean visualizeState() {           return (boolean)            configuration.valueForTrait("Visualize State")              ; }
+  static boolean visualizeAnalyzer() {        return (boolean)            configuration.valueForTrait("Visualize Analyzer")           ; }
+  static boolean visualizeBPMFinder() {       return (boolean)            configuration.valueForTrait("Visualize BPM-Finder")         ; }
+  static int maximumVisualFrequency() {       return (int)                configuration.valueForTrait("Highest Visualized Frequency") ; }
+  static float visualizationHistory() {       return (float)              configuration.valueForTrait("Visualization History")        ; }
 }
 
 

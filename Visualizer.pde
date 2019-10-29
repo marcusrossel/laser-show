@@ -1,12 +1,16 @@
+import java.awt.Point;
+
 final class Visualizer {
 
   // Records the highest intensity of a frequency ever measured.
   float maxAmplitude = 0f;
   
-  // Needed for loudness indicator smoothing.
-  float lastLoudness = 0;
-  float lastLoudnessUpdate = 0;
-  float loudnessUpdateCycle = 80; // 0.08 seconds
+  // Needed for analyzer history visualization.
+  TimedQueue loudnessHistory = new TimedQueue(0f);
+  TimedQueue averageHistory = new TimedQueue(0f);
+  TimedQueue thresholdHistory = new TimedQueue(0f);
+  TimedQueue recentMaxHistory = new TimedQueue(0f);
+  TimedQueue thresholdMinHistory = new TimedQueue(0f);
   
   void init() {
     textFont(createFont("Helvetica Neue", 24, true));  
@@ -21,24 +25,26 @@ final class Visualizer {
   }
   
   private int adjustedWidth() {
-    if (Runtime.useBPMFinder() && State.inputSource == InputSource.analyzer) {
-      return (int) (0.95 * width);  
-    } else {
-      return width;  
-    }
+    return Runtime.visualizeBPMFinder() ? int(0.95 * width) : width; 
   }
   
   private void showSpectrum(FFT chunk) {
-    // Draws 100Hz marks.
+    // Draws 200Hz marks.
     strokeWeight(1);
-    for (int frequency = 100; frequency < Runtime.maximumVisualFrequency(); frequency += 100) {
-      if (frequency % 500 == 0) { stroke(100); } else { stroke(40); };
+    for (int frequency = 200; frequency < Runtime.maximumVisualFrequency(); frequency += 200) {
+      if (frequency % 1000 == 0) { stroke(100); } else { stroke(40); };
       int x = (int) map(frequency, 0, Runtime.maximumVisualFrequency(), 0, adjustedWidth());
       line(x, 0, x, height); 
     }
     
-    int bandCount = (int) (((float) Runtime.maximumVisualFrequency()) / chunk.getBandWidth());
+    int bandCount = int(float(Runtime.maximumVisualFrequency()) / chunk.getBandWidth());
     int bandLengthX = Math.round((float) adjustedWidth() / (float) bandCount);
+    
+    int lowerFrequencyFinderBand = Math.round(map(analyzer.lowerFrequencyBound, 0, Runtime.maximumVisualFrequency(), 0, bandCount));
+    int upperFrequencyFinderBand = Math.round(map(analyzer.upperFrequencyBound, 0, Runtime.maximumVisualFrequency(), 0, bandCount));
+    int detectedFrequencyFinderBand = Math.round(map(analyzer.frequencyFinderDetection, 0, Runtime.maximumVisualFrequency(), 0, bandCount));
+
+    noStroke();
 
     // Draws the band intensities.
     for (int band = 0; band <= bandCount; band++) {
@@ -49,58 +55,62 @@ final class Visualizer {
       
       int bandLengthY = (int) map(amplitude, 0, maxAmplitude, 0, height);
 
-      noStroke();
-      fill(255);
+      if (band == detectedFrequencyFinderBand) {
+        fill(220, 100, 240);
+      } else if (band >= lowerFrequencyFinderBand && band <= upperFrequencyFinderBand) {
+        fill(220, 190, 240);
+      } else {
+        fill(100);  
+      }
+      
       rect(xOffset, height - bandLengthY, bandLengthX, bandLengthY);
     }
   }
   
-  private void showAnalyzer() {
-    // Needed for loudness indicator smoothing.
-    if (millis() - lastLoudnessUpdate > loudnessUpdateCycle) {
-      lastLoudness = analyzer.recordedLoudness;
-      lastLoudnessUpdate = millis();
+  private void showAnalyzer() {    
+    loudnessHistory.retentionDuration = Runtime.visualizationHistory();
+    averageHistory.retentionDuration = Runtime.visualizationHistory();
+    thresholdHistory.retentionDuration = Runtime.visualizationHistory();
+    recentMaxHistory.retentionDuration = Runtime.visualizationHistory();
+    thresholdMinHistory.retentionDuration = Runtime.visualizationHistory();
+    
+    loudnessHistory.push(analyzer.recordedLoudness);
+    averageHistory.push(analyzer.averageLoudness);
+    thresholdHistory.push(analyzer.triggerLoudness);
+    recentMaxHistory.push(analyzer.recentMaxLoudness);
+    thresholdMinHistory.push(analyzer.minimumTriggerLoudness);
+    
+    List<List<Point>> historyLines = Arrays.asList(
+      pointsForHistory(loudnessHistory),
+      pointsForHistory(averageHistory),
+      pointsForHistory(thresholdHistory),
+      pointsForHistory(recentMaxHistory),
+      pointsForHistory(thresholdMinHistory)
+    );
+    
+    color[] lineColors = {
+      color(255, 255, 255),
+      color(255, 0, 0, 100),
+      color(0, 255, 0),
+      color(100),
+      color(0, 100, 255, 100)
+    };
+
+    strokeWeight(3);
+    for (int lineIndex = 0; lineIndex < historyLines.size(); lineIndex++) {
+      List<Point> line = historyLines.get(lineIndex);
+      if (historyLines.get(lineIndex).size() < 2) { break; }
+      
+      stroke(lineColors[lineIndex]);
+      
+      for (int pointIndex = 1; pointIndex < line.size(); pointIndex++) {
+        Point point1 = line.get(pointIndex - 1);
+        Point point2 = line.get(pointIndex);
+        
+        line(point1.x, point1.y, point2.x, point2.y);
+      }
     }
     
-    // Establishes relevant X and Y coordinates.
-    int lowerFrequencyX =         (int) map(analyzer.lowerFrequencyBound,      0, Runtime.maximumVisualFrequency(), 0,      adjustedWidth());
-    int upperFrequencyX =         (int) map(analyzer.upperFrequencyBound,      0, Runtime.maximumVisualFrequency(), 0,      adjustedWidth());
-    int detectedFrequencyX =      (int) map(analyzer.frequencyFinderDetection, 0, Runtime.maximumVisualFrequency(), 0,      adjustedWidth());
-    int recordedLoudnessY =       (int) map(lastLoudness,                      0, analyzer.totalMaxLoudness,        height, 0);
-    int triggerLoudnessY =        (int) map(analyzer.triggerLoudness,          0, analyzer.totalMaxLoudness,        height, 0);
-    int averageLoudnessY =        (int) map(analyzer.averageLoudness,          0, analyzer.totalMaxLoudness,        height, 0);
-    int recentMaxLoudnessY =      (int) map(analyzer.recentMaxLoudness,        0, analyzer.totalMaxLoudness,        height, 0);
-    int minimumTriggerLoudnessY = (int) map(analyzer.minimumTriggerLoudness,   0, analyzer.totalMaxLoudness,        height, 0);
-    
-    // Draws the frequency range in magenta.
-    fill(255, 0, 200, 80);
-    rect(lowerFrequencyX, 0, upperFrequencyX - lowerFrequencyX, height);
-
-    // Draws the detected frequency in purple.
-    strokeWeight(3);
-    stroke(110, 20, 200);
-    line(detectedFrequencyX, 0, detectedFrequencyX, height);
-
-    // Draws the recorded loudness in white.
-    strokeWeight(4);
-    stroke(255, 255, 255);
-    line(0, recordedLoudnessY, adjustedWidth(), recordedLoudnessY);
-
-    // Draws the average loudness in red.
-    stroke(255, 0, 0, 100);
-    line(0, averageLoudnessY, adjustedWidth(), averageLoudnessY);
-
-    // Draws the trigger loudness in green.
-    stroke(0, 255, 0);
-    line(0, triggerLoudnessY, adjustedWidth(), triggerLoudnessY);
-    
-    // Draws the recent maximum loudness in grey.
-    stroke(100);
-    line(0, recentMaxLoudnessY, adjustedWidth(), recentMaxLoudnessY);
-
-    // Draws the minimum trigger loudness in blue.
-    stroke(0, 0, 255, 100);
-    line(0, minimumTriggerLoudnessY, adjustedWidth(), minimumTriggerLoudnessY);
     
     // Draws the trigger pane.
     noStroke();
@@ -116,6 +126,27 @@ final class Visualizer {
       fill(lasers.timedOut ? #87712B : #FEE12B);
       rect((laser * paneWidth) + spacing, spacing, paneWidth - spacing, 35, 7);
     }
+  }
+  
+  private List<Point> pointsForHistory(TimedQueue history) {
+    List<Float> values = history.getValues();
+    List<Integer> timeStamps = history.getTimeStamps();
+    
+    if (values.isEmpty()) { return new ArrayList<Point>(); }
+    
+    int historyDurationMillis = int(Runtime.visualizationHistory() * 1000);
+    int timeStampOffset = timeStamps.get(timeStamps.size() - 1) - historyDurationMillis;
+    
+    List<Point> points = new ArrayList<Point>();
+    
+    for (int index = 0; index < timeStamps.size(); index++) {
+      int y = (int) map(values.get(index), 0, analyzer.totalMaxLoudness, height, 0);
+      int x = Math.round(map(timeStamps.get(index) - timeStampOffset, 0, historyDurationMillis, adjustedWidth(), 0));
+      
+      points.add(new Point(x, y));
+    }
+    
+    return points;
   }
   
   private void showBPMAnalysis() {

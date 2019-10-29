@@ -31,6 +31,13 @@ final class TimedQueue {
     
     return timeStamps.subList(startIndex, timeStamps.size() - 1);
   }
+  
+  List<Float> getValues() {
+    int startIndex = startOfRelevantHistory();
+    if (startIndex < 0) { return new ArrayList<Float>(); }
+    
+    return values.subList(startIndex, values.size() - 1);
+  }
 
   void push(float value) {
     int now = millis();
