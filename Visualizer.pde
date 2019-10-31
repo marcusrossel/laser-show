@@ -24,6 +24,10 @@ final class Visualizer {
     if (Runtime.visualizeState())     { showState(); }
   }
   
+  private List<TimedQueue> allHistories() {
+    return Arrays.asList(loudnessHistory, averageHistory, thresholdHistory, recentMaxHistory, thresholdMinHistory);
+  }
+  
   private int adjustedWidth() {
     return Runtime.visualizeBPMFinder() ? int(0.95 * width) : width; 
   }
@@ -68,49 +72,71 @@ final class Visualizer {
   }
   
   private void showAnalyzer() {    
-    loudnessHistory.retentionDuration = Runtime.visualizationHistory();
-    averageHistory.retentionDuration = Runtime.visualizationHistory();
-    thresholdHistory.retentionDuration = Runtime.visualizationHistory();
-    recentMaxHistory.retentionDuration = Runtime.visualizationHistory();
-    thresholdMinHistory.retentionDuration = Runtime.visualizationHistory();
-    
+    for (TimedQueue history : allHistories()) {
+      history.retentionDuration = Runtime.visualizationHistory();
+    }
+
     loudnessHistory.push(analyzer.recordedLoudness);
     averageHistory.push(analyzer.averageLoudness);
     thresholdHistory.push(analyzer.triggerLoudness);
     recentMaxHistory.push(analyzer.recentMaxLoudness);
     thresholdMinHistory.push(analyzer.minimumTriggerLoudness);
     
-    List<List<Point>> historyLines = Arrays.asList(
-      pointsForHistory(loudnessHistory),
-      pointsForHistory(averageHistory),
-      pointsForHistory(thresholdHistory),
-      pointsForHistory(recentMaxHistory),
-      pointsForHistory(thresholdMinHistory)
-    );
+    List<List<Point>> historyLines = new ArrayList<List<Point>>();
+    for (TimedQueue history : allHistories()) {
+      historyLines.add(pointsForHistory(history));
+    }
     
     color[] lineColors = {
       color(255, 255, 255),
-      color(255, 0, 0, 100),
+      color(255, 165, 0, 150),
       color(0, 255, 0),
       color(100),
-      color(0, 100, 255, 100)
+      color(0, 100, 255, 150)
     };
 
     strokeWeight(3);
-    for (int lineIndex = 0; lineIndex < historyLines.size(); lineIndex++) {
-      List<Point> line = historyLines.get(lineIndex);
-      if (historyLines.get(lineIndex).size() < 2) { break; }
+    for (int historyIndex = 0; historyIndex < allHistories().size(); historyIndex++) {
+      List<Point> line = pointsForHistory(allHistories().get(historyIndex));
+      if (line.size() < 2) { break; }
       
-      stroke(lineColors[lineIndex]);
+      stroke(lineColors[historyIndex]);
+      
+      // Needed to connect NaN-points (meaning [y = -1]-points).
+      Point lastGoodPoint = line.get(0);
       
       for (int pointIndex = 1; pointIndex < line.size(); pointIndex++) {
+        // Point 1 is older than point 2.
         Point point1 = line.get(pointIndex - 1);
         Point point2 = line.get(pointIndex);
         
-        line(point1.x, point1.y, point2.x, point2.y);
+        // Draws segments that have a y-value of -1 as straight line between the enclosing "normal" points in a red color.
+        // Y-values of -1 are produced by the pointsForHistory method, when a value is NaN.
+        // A normal case when this occurs is when the trigger threshold is set to NaN as a result of bpm-limitation.
+        
+        if (point1.y != -1 && point2.y == -1) /*Transition from normal to NaN values.*/ {
+          lastGoodPoint = point1;
+        } else if (point1.y == -1 && point2.y == -1) /*Mid NaN values.*/ {
+          // Draws a horizontal line if the mid-NaN passage is at the very end of the history (the newset thing happening).
+          if (point2.x == 0) {
+            stroke(200, 20, 30, 150);
+            line(lastGoodPoint.x, lastGoodPoint.y, point2.x, lastGoodPoint.y);
+            stroke(lineColors[historyIndex]);
+          }
+        } else if (point1.y == -1 && point2.y != -1) /*Transition from NaN to normal values.*/ {
+          // Doesn't draw the transition if it's from a NaN-segement that's at the very beginning of the history (oldest thing), because then the lastGoodPoint is no help.
+          // This state can be detected by checking if the lastGoodPoint has changed to something other that line-get(0) yet.
+          // If not, we have not had a proper transition from normal values to NaN-values -> we are starting with a NaN-segment. 
+          if (lastGoodPoint != line.get(0)) {
+            stroke(200, 20, 30, 150);
+            line(lastGoodPoint.x, lastGoodPoint.y, point2.x, point2.y);
+            stroke(lineColors[historyIndex]);
+          }
+        } else /*Mid normal values.*/ {
+          line(point1.x, point1.y, point2.x, point2.y);
+        }
       }
     }
-    
     
     // Draws the trigger pane.
     noStroke();
@@ -128,6 +154,7 @@ final class Visualizer {
     }
   }
   
+  // If any value is NaN the corresponding y-point will be -1.
   private List<Point> pointsForHistory(TimedQueue history) {
     List<Float> values = history.getValues();
     List<Integer> timeStamps = history.getTimeStamps();
@@ -140,7 +167,7 @@ final class Visualizer {
     List<Point> points = new ArrayList<Point>();
     
     for (int index = 0; index < timeStamps.size(); index++) {
-      int y = (int) map(values.get(index), 0, analyzer.totalMaxLoudness, height, 0);
+      int y = values.get(index).isNaN() ? -1 : ((int) map(values.get(index), 0, analyzer.totalMaxLoudness, height, 0));        
       int x = Math.round(map(timeStamps.get(index) - timeStampOffset, 0, historyDurationMillis, adjustedWidth(), 0));
       
       points.add(new Point(x, y));
@@ -202,5 +229,19 @@ final class Visualizer {
       
       text("Maus Modus: " + stateString, 10, 100);  
     }
+  }
+  
+  // For debugging.
+  void printMemoryUsage() {
+    print("loudness history:\t");
+    loudnessHistory.printMemoryUsage();
+    print("average history:\t");
+    averageHistory.printMemoryUsage();
+    print("threshold history:\t");
+    thresholdHistory.printMemoryUsage();
+    print("recent max history:\t");
+    recentMaxHistory.printMemoryUsage();
+    print("threshold min history:\t");
+    thresholdMinHistory.printMemoryUsage();
   }
 }

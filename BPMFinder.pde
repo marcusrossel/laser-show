@@ -1,14 +1,12 @@
 final class BPMFinder {
   
-  private final float someFloat = 0;
-  
   private boolean didSmoothDelay = false;
   
-  private TimedQueue triggerHistory = new TimedQueue(0f);
+  private TimedQueue triggerHistory = new TimedQueue(0f, /*noValues*/ true);
   private TimedQueue deviationHistory = new TimedQueue(0f);
   
   void recordFiring() {
-    triggerHistory.push(someFloat); 
+    triggerHistory.push(Float.NaN); 
     deviationHistory.push(relativeDeviation());
   }
   
@@ -24,7 +22,7 @@ final class BPMFinder {
       sum += (timeStamps.get(index) - timeStamps.get(index - 1));
     }
     
-    float averageDelay = ((float) sum) / (timeStamps.size() - 1);
+    float averageDelay = float(sum)/ (timeStamps.size() - 1);
     
     // If this were not here, the average firing delay would only ever update with every new firing.
     // This way, there's a smooth transition between the values.
@@ -34,7 +32,7 @@ final class BPMFinder {
       didSmoothDelay = true;
       
       sum += now;
-      averageDelay = ((float) sum) / timeStamps.size();
+      averageDelay = float(sum) / timeStamps.size();
     } else {
       didSmoothDelay = false;  
     }
@@ -84,5 +82,7 @@ final class BPMFinder {
   void printMemoryUsage() {
     print("trigger history:\t");
     triggerHistory.printMemoryUsage();
+    print("deviation history:\t");
+    deviationHistory.printMemoryUsage();
   }
 }

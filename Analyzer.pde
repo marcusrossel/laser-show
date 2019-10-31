@@ -31,8 +31,10 @@ final class Analyzer {
     updateLoudnessDependantVariables();
   
     float minimumDelay = (60000f / Runtime.maximumBPM()); 
-    boolean maxBPMDurationWasPassed = (millis() - timeOfLastTrigger) > minimumDelay;
-    didTrigger = (recordedLoudness > triggerLoudness) && maxBPMDurationWasPassed;
+    boolean bpmLimitationOccured = (millis() - timeOfLastTrigger) <= minimumDelay;
+    if (bpmLimitationOccured) { triggerLoudness = Float.NaN; }
+    
+    didTrigger = recordedLoudness > triggerLoudness;
     
     updateTriggerDependantVariables();
   }

@@ -2,8 +2,15 @@ final class TimedQueue {
 
   TimedQueue(float retentionDuration) {
     this.retentionDuration = retentionDuration;
+    noValues = false;
+  }
+  
+  TimedQueue(float retentionDuration, boolean noValues) {
+    this.retentionDuration = retentionDuration;
+    this.noValues = noValues;
   }
 
+  private boolean noValues;
   private List<Float> values = new ArrayList<Float>();
   private List<Integer> timeStamps = new ArrayList<Integer>();
   
@@ -42,22 +49,22 @@ final class TimedQueue {
   void push(float value) {
     int now = millis();
  
-    values.add(value);
+    if (!noValues) { values.add(value); }
     timeStamps.add(now);
 
     // Removes the values that are older than the retention duration.
     // Removal only happens once at least 500 values have accumulated. This is done to reduce the runtime cost of reallocating array memory. 
-    if (values.size() > 500) {
+    if (timeStamps.size() > 500) {
       // Removes the values only if the oldest recorded value is at least (2 * retention duration) old.
       // The factor 1000 converts the rentation duration from seconds to milliseconds. 
       if (now - timeStamps.get(0) > (2 * retentionDuration * 1000)) {
         int startIndex = startOfRelevantHistory();
     
         if (startIndex < 0) {
-          values = new ArrayList();
+          if (!noValues) { values = new ArrayList(); }
           timeStamps = new ArrayList();
         } else {
-          values = values.subList(startIndex, values.size() - 1);
+          if (!noValues) { values = values.subList(startIndex, values.size() - 1); }
           timeStamps = timeStamps.subList(startIndex, timeStamps.size() - 1);
         }
       }
@@ -65,6 +72,8 @@ final class TimedQueue {
   }
     
   float average() {
+    if (noValues) { return Float.NaN; }
+    
     int startIndex = startOfRelevantHistory();
     if (startIndex < 0) { return 0; }
   
@@ -79,6 +88,8 @@ final class TimedQueue {
   }
   
   float max() {
+    if (noValues) { return Float.NaN; }
+    
     int startIndex = startOfRelevantHistory();
     if (startIndex < 0) { return 0; }
     
@@ -92,6 +103,7 @@ final class TimedQueue {
   
   // For debugging.
   void printMemoryUsage() {
-    println("values: ", values.size(), ",\ttime stamps: ", timeStamps.size());  
+    if (!noValues) { print("values: " + values.size() + "\t"); }
+    println("time stamps: ", timeStamps.size());  
   }
 }
