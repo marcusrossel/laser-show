@@ -34,6 +34,7 @@ final class Patterns {
   }; 
   
   private LinkedList<Set<Integer>> history = new LinkedList<Set<Integer>>();
+  private Set<Integer> lastGeneratedPattern = new HashSet<Integer>();
   
   private int historyIndex = 0; // is always pointing at an element that has not yet been used (like endIndex)
   private int routineIndex = 0; // is always pointing at the routine that is currently being used to generate new patterns
@@ -53,11 +54,16 @@ final class Patterns {
     }
     
     int[] patternArray = routines[routineIndex][patternIndex];
+    patternIndex++;
+    
     Set<Integer> pattern = new HashSet();
     for (int element : patternArray) { pattern.add(element); }
 
+    // Makes sure that the same pattern doesn't occur twice in a row (which can occur across routine boundaries). 
+    if (pattern.equals(lastGeneratedPattern)) { generateNewPattern(); }
+
+    lastGeneratedPattern = pattern;
     history.add(pattern);
-    patternIndex++;
     
     if (history.size() > Runtime.patternHistory()) {
       history.removeFirst();
