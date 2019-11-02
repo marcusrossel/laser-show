@@ -18,10 +18,11 @@ final class Visualizer {
   
   void update(FFT chunk) {
     background(0);
-    if (Runtime.visualizeSpectrum())  { showSpectrum(chunk); }
-    if (Runtime.visualizeAnalyzer())  { showAnalyzer(); }
-    if (Runtime.visualizeBPMFinder()) { showBPMAnalysis(); }
-    if (Runtime.visualizeState())     { showState(); }
+    if (Runtime.visualizeSpectrum())                              { showSpectrum(chunk); }
+    if (Runtime.visualizeAnalyzer())                              { showAnalyzer(); }
+    if (Runtime.visualizeLasers())                                { showTriggerPane(); }
+    if (Runtime.useBPMFinder() && Runtime.visualizeBPMFinder())   { showBPMAnalysis(); }
+    if (Runtime.visualizeState())                                 { showState(); }
   }
   
   private List<TimedQueue> allHistories() {
@@ -29,8 +30,16 @@ final class Visualizer {
   }
   
   private int adjustedWidth() {
-    return Runtime.visualizeBPMFinder() ? int(0.95 * width) : width; 
+    return (Runtime.useBPMFinder() && Runtime.visualizeBPMFinder()) ? int(0.95 * width) : width; 
   }
+  
+  private int adjustedTopY() {
+    return Runtime.visualizeLasers() ? int(0.06 * height) : 0; 
+  }
+  
+  private int adjustedBottomY() {
+    return Runtime.visualizeState() ? int(0.95 * height) : height; 
+  } 
   
   private void showSpectrum(FFT chunk) {
     // Draws 200Hz marks.
@@ -38,11 +47,11 @@ final class Visualizer {
     for (int frequency = 200; frequency < Runtime.maximumVisualFrequency(); frequency += 200) {
       if (frequency % 1000 == 0) { stroke(100); } else { stroke(40); };
       int x = (int) map(frequency, 0, Runtime.maximumVisualFrequency(), 0, adjustedWidth());
-      line(x, 0, x, height); 
+      line(x, adjustedBottomY(), x, adjustedTopY()); 
     }
     
     int bandCount = int(float(Runtime.maximumVisualFrequency()) / chunk.getBandWidth());
-    int bandLengthX = Math.round((float) adjustedWidth() / (float) bandCount);
+    int bandLengthX = Math.round(float(adjustedWidth()) / float(bandCount));
     
     int lowerFrequencyFinderBand = Math.round(map(analyzer.lowerFrequencyBound, 0, Runtime.maximumVisualFrequency(), 0, bandCount));
     int upperFrequencyFinderBand = Math.round(map(analyzer.upperFrequencyBound, 0, Runtime.maximumVisualFrequency(), 0, bandCount));
@@ -57,17 +66,17 @@ final class Visualizer {
       float amplitude = chunk.getBand(band);
       maxAmplitude = max(maxAmplitude, amplitude);
       
-      int bandLengthY = (int) map(amplitude, 0, maxAmplitude, 0, height);
+      int bandY = (int) map(amplitude, 0, maxAmplitude, adjustedBottomY(), adjustedTopY());
 
       if (band == detectedFrequencyFinderBand) {
-        fill(220, 100, 240);
+        fill(120, 10, 140);
       } else if (band >= lowerFrequencyFinderBand && band <= upperFrequencyFinderBand) {
-        fill(220, 190, 240);
+        fill(120, 90, 140);
       } else {
-        fill(100);  
+        fill(60);  
       }
       
-      rect(xOffset, height - bandLengthY, bandLengthX, bandLengthY);
+      rect(xOffset, bandY, bandLengthX, adjustedBottomY() - bandY);
     }
   }
   
@@ -91,7 +100,7 @@ final class Visualizer {
       color(255, 255, 255),
       color(255, 165, 0, 150),
       color(0, 255, 0),
-      color(100),
+      color(92, 64, 51),
       color(0, 100, 255, 150)
     };
 
@@ -137,21 +146,27 @@ final class Visualizer {
         }
       }
     }
-    
-    // Draws the trigger pane.
-    noStroke();
+  }
   
+  private void showTriggerPane() {
     Set<Integer> highLasers = lasers.lastOutput;
     
-    int spacing = 5;
-    int paneWidth = Math.round((adjustedWidth() - spacing) / max(Runtime.laserPins().size(), 1));
+    int xSpacing = ceil(0.003 * adjustedWidth());
+    int YSpacing = ceil(0.1 * adjustedTopY());
+    int paneWidth = Math.round((adjustedWidth() - xSpacing) / max(Runtime.laserPins().size(), 1));
       
+    noStroke();
     for (int laser = 0; laser < Runtime.laserPins().size(); laser++) {
       if (!highLasers.contains(laser)) { continue; }
       
       fill(lasers.timedOut ? #87712B : #FEE12B);
-      rect((laser * paneWidth) + spacing, spacing, paneWidth - spacing, 35, 7);
+      rect((laser * paneWidth) + xSpacing, max(1, YSpacing - 1), paneWidth - xSpacing, adjustedTopY() - (2 * YSpacing), 7);
     }
+    
+    // Draws a seperator to the rest of the visualizations.
+    stroke(255);
+    strokeWeight(3);
+    line(0, adjustedTopY(), adjustedWidth(), adjustedTopY());
   }
   
   // If any value is NaN the corresponding y-point will be -1.
@@ -167,7 +182,7 @@ final class Visualizer {
     List<Point> points = new ArrayList<Point>();
     
     for (int index = 0; index < timeStamps.size(); index++) {
-      int y = values.get(index).isNaN() ? -1 : ((int) map(values.get(index), 0, analyzer.totalMaxLoudness, height, 0));        
+      int y = values.get(index).isNaN() ? -1 : ((int) map(values.get(index), 0, analyzer.totalMaxLoudness, adjustedBottomY(), adjustedTopY()));        
       int x = Math.round(map(timeStamps.get(index) - timeStampOffset, 0, historyDurationMillis, adjustedWidth(), 0));
       
       points.add(new Point(x, y));
@@ -201,7 +216,13 @@ final class Visualizer {
     
     // Draws the BPM-value.
     fill(255);
-    text((int) bpmFinder.estimatedBPM(), adjustedWidth() + 8, height - 20);
+    textAlign(CENTER, CENTER);
+    int fieldWidth = width - adjustedWidth();
+    int fieldHeight = int(0.04 * height);
+    int margin = ceil(0.2 * fieldWidth);
+    String bpmString = String.valueOf((int) bpmFinder.estimatedBPM());
+    updateTextSizeFor(bpmString, fieldWidth - margin, fieldHeight);
+    text(bpmString, adjustedWidth() + (fieldWidth / 2), height - ((0.1 * height) / 2));
          
     // Draws a seperator to the rest of the visualizations.
     stroke(255);
@@ -209,26 +230,50 @@ final class Visualizer {
     line(adjustedWidth(), 0, adjustedWidth(), height);
   }
 
-  private void showState() {
+  private void showState() {    
     String stateString = "";
+    
     switch (State.inputSource) {
-      case none:     stateString = "Keine"; break;
-      case analyzer: stateString = "Beat-Erkennung"; break;
-      case mouse:    stateString = "Maus"; break;
+      case none:
+        stateString = "Keine";
+        break;
+        
+      case analyzer:
+        stateString = "Audio-Analyse";
+        if (Runtime.useBPMFinder()) { stateString += " mit BPM-Erkennung"; } 
+        break;
+        
+      case mouse:
+        stateString = "Maus";
+        
+        switch (State.mouseMode) {
+          case allOff: stateString += " (alle Laser aus)"; break;
+          case allOn:  stateString += " (alle Laser an)"; break;
+          case wheel:  stateString += " (Muster durch Mausrad)"; break;
+        }
     }
     
-    fill(255);    
-    text("Inputquelle: " + stateString, 10, 70);
+    fill(255);
+    textAlign(CENTER, CENTER);
+    int fieldHeight = height - adjustedBottomY();
+    int margin = ceil(0.3 * fieldHeight);
+    updateTextSizeFor(stateString, adjustedWidth() - margin, fieldHeight - margin);
     
-    if (State.inputSource == InputSource.mouse) {     
-      switch (State.mouseMode) {
-        case allOff: stateString = "Alle Laser aus"; break;
-        case allOn:  stateString = "Alle Laser an"; break;
-        case wheel:  stateString = "Muster durch Mausrad"; break;
-      }
-      
-      text("Maus Modus: " + stateString, 10, 100);  
-    }
+    text(stateString, adjustedWidth() / 2, adjustedBottomY() + (fieldHeight / 2));
+    
+    // Draws a seperator to the rest of the visualizations.
+    stroke(255);
+    strokeWeight(3);
+    line(0, adjustedBottomY(), adjustedWidth(), adjustedBottomY());
+  }
+  
+  private void updateTextSizeFor(String string, int maxWidth, int maxHeight) {
+    textSize(50);
+    
+    float minWidthSize = 50 / textWidth(string) * maxWidth;
+    float minHeightSize = 50 / (textDescent() + textAscent()) * maxHeight;
+ 
+    textSize(min(minWidthSize, minHeightSize));  
   }
   
   // For debugging.

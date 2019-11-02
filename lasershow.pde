@@ -63,6 +63,7 @@ static final class Runtime {
   static boolean visualizeSpectrum() {        return (boolean)            configuration.valueForTrait("Visualize Spectrum")           ; }
   static boolean visualizeState() {           return (boolean)            configuration.valueForTrait("Visualize State")              ; }
   static boolean visualizeAnalyzer() {        return (boolean)            configuration.valueForTrait("Visualize Analyzer")           ; }
+  static boolean visualizeLasers() {          return (boolean)            configuration.valueForTrait("Visualize Lasers")             ; }
   static boolean visualizeBPMFinder() {       return (boolean)            configuration.valueForTrait("Visualize BPM-Finder")         ; }
   static int maximumVisualFrequency() {       return (int)                configuration.valueForTrait("Highest Visualized Frequency") ; }
   static float visualizationHistory() {       return (float)              configuration.valueForTrait("Visualization History")        ; }

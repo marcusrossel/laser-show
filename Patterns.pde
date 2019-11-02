@@ -41,7 +41,7 @@ final class Patterns {
     
   private Random randomNumberGenerator = new Random();
   
-  // TODO: Get this inline in line 36.
+  // TODO: Get this inline into the declaration of `history`.
   Patterns() {
     history.add(allOn);
   }
